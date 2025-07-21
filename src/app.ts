@@ -37,4 +37,8 @@ app.use('/api/v1/balance', balanceRoutes);
 app.use('/api/v1/admin', checkPayment);
 app.use('/api/v1/fforder', fforder);
 
+// server check api
+app.get("/",(req,res)=>{
+  res.send("MoneyHub Server is running");
+})
 export default app;

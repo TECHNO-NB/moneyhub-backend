@@ -32,4 +32,8 @@ app.use('/api/v1/users', userRoutes_1.default);
 app.use('/api/v1/balance', balanceRoutes_1.default);
 app.use('/api/v1/admin', adminRoutes_1.default);
 app.use('/api/v1/fforder', ffOrderRoutes_1.default);
+// server check api
+app.get("/", (req, res) => {
+    res.send("MoneyHub Server is running");
+});
 exports.default = app;
