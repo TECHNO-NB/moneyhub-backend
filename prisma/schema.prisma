@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  fullName     String
+  avatar       String
+  balance      Int           @default(0)
+  role         Role          @default(user)
+  refreshToken String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  loadBalance  LoadBalance[]
+  order        ffOrder[]
+}
+
+model LoadBalance {
+  id                String   @id @default(cuid())
+  paymentScreenshot String
+  amount            Int
+  status            Status   @default(pending)
+  message           String   @default("Your coin is being processed.Your collect coin will be updated shortly")
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+model ffOrder {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  ffUid        Int
+  ffName       String
+  diamondPrice Int
+  diamondTitle String
+  status       Status @default(pending)
+  message      String @default("Your ff topup order is being processed.")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+}
+
+enum Role {
+  user
+  admin
+  subadmin
+}
+
+enum Status {
+  pending
+  approved
+  delivered 
+  rejected
+}
