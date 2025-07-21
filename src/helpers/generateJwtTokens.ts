@@ -19,7 +19,7 @@ const generateRefreshAccessToken = async (userData: UserPayload) => {
       balance: userData.balance,
     },
     process.env.JWT_REFRESH_TOKEN_SECRET!,
-    { expiresIn: '7d' }
+    { expiresIn: '8d' }
   );
 
   const accessToken = jwt.sign(
@@ -28,7 +28,7 @@ const generateRefreshAccessToken = async (userData: UserPayload) => {
       email: userData.email,
     },
     process.env.JWT_ACCESS_TOKEN_SECRET!,
-    { expiresIn: '1h' }
+    { expiresIn: '8d' }
   );
 
   // Optional: Save the refreshToken to DB

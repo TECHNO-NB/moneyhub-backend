@@ -101,6 +101,13 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
     orderBy: {
       updatedAt: 'desc',
     },
+    include: {
+      user: {
+        select: {
+          fullName: true,
+        },
+      },
+    },
   });
 
   if (!allFfOrder || allFfOrder.length === 0) {

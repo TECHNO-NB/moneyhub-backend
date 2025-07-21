@@ -108,6 +108,13 @@ const allFfOrderControllers = (0, asyncHandler_1.default)((req, res) => __awaite
         orderBy: {
             updatedAt: 'desc',
         },
+        include: {
+            user: {
+                select: {
+                    fullName: true,
+                },
+            },
+        },
     });
     if (!allFfOrder || allFfOrder.length === 0) {
         throw new apiError_1.default(false, 500, 'unabale to fetch user load balance data');
