@@ -1,6 +1,6 @@
 export interface ffOrderTypes {
   userId: String;
-  ffUid: Number;
+  ffUid: BigInt;
   ffName: String;
   diamondPrice: Number;
   diamondTitle: String;
