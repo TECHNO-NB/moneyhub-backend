@@ -13,16 +13,15 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
   }
 
   const { ffUid, ffName, diamondPrice, diamondTitle } = req.body;
- 
-  // @ts-nocheck
 
+  // @ts-nocheck
 
   if (!ffUid || !ffName || !diamondPrice || !diamondTitle) {
     throw new ApiError(false, 400, 'Please fill all the fields ');
   }
   const orderData: ffOrderTypes = {
     userId: userId,
-    ffUid: ffUid,
+    ffUid: JSON.stringify(ffUid),
     ffName: ffName,
     diamondPrice: diamondPrice,
     diamondTitle: JSON.stringify(diamondTitle),
