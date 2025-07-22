@@ -21,7 +21,7 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
   }
   const orderData: ffOrderTypes = {
     userId: userId,
-    ffUid: JSON.stringify(ffUid),
+    ffUid: ffUid,
     ffName: ffName,
     diamondPrice: diamondPrice,
     diamondTitle: JSON.stringify(diamondTitle),
