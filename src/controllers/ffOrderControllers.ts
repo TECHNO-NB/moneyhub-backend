@@ -19,7 +19,7 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
   }
   const orderData: ffOrderTypes = {
     userId: userId,
-    ffUid: BigInt(JSON.stringify(ffUid)),
+    ffUid: BigInt(ffUid),
     ffName: ffName,
     diamondPrice: diamondPrice,
     diamondTitle: JSON.stringify(diamondTitle),
