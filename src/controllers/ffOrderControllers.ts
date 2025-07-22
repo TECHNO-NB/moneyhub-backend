@@ -22,7 +22,7 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
     ffUid: Number(ffUid),
     ffName: ffName,
     diamondPrice: diamondPrice,
-    diamondTitle: diamondTitle,
+    diamondTitle: JSON.stringify(diamondTitle),
   };
   const createOrder = await prisma.ffOrder.create({
     // @ts-ignore

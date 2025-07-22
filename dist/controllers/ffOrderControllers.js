@@ -33,7 +33,7 @@ const buyDiamondControllers = (0, asyncHandler_1.default)((req, res) => __awaite
         ffUid: Number(ffUid),
         ffName: ffName,
         diamondPrice: diamondPrice,
-        diamondTitle: diamondTitle,
+        diamondTitle: JSON.stringify(diamondTitle),
     };
     const createOrder = yield db_1.default.ffOrder.create({
         // @ts-ignore
