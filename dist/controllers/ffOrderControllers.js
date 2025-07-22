@@ -30,7 +30,7 @@ const buyDiamondControllers = (0, asyncHandler_1.default)((req, res) => __awaite
     }
     const orderData = {
         userId: userId,
-        ffUid: Number(ffUid),
+        ffUid: BigInt(JSON.stringify(ffUid)),
         ffName: ffName,
         diamondPrice: diamondPrice,
         diamondTitle: JSON.stringify(diamondTitle),
