@@ -31,11 +31,13 @@ const generateRefreshAccessToken = async (userData: UserPayload) => {
     { expiresIn: '8d' }
   );
 
-  // Optional: Save the refreshToken to DB
-  await prisma.user.update({
+  const isUpdate = await prisma.user.update({
     where: { id: userData.id },
-    data: { refreshToken},
+    data: { refreshToken },
   });
+  if (!isUpdate) {
+    throw new Error('Failed to update user');
+  }
 
   return { refreshToken, accessToken };
 };

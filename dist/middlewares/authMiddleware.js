@@ -29,11 +29,11 @@ const jwtVerify = (0, asyncHandler_1.default)((req, res, next) => __awaiter(void
         }
         const user = yield db_1.default.user.findUnique({ where: { id: decodeAccessToken.id } });
         if (!user || user.refreshToken !== refreshToken) {
-            throw new apiError_1.default(false, 401, 'Invalid refresh token');
+            throw new apiError_1.default(false, 401, 'Invalid refresh token deu to mismatch of token in db and cookie');
         }
         const decodeRefreshToken = yield jsonwebtoken_1.default.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
         if (!decodeRefreshToken) {
-            throw new apiError_1.default(false, 401, 'Invalid refresh token');
+            throw new apiError_1.default(false, 401, 'Invalid refresh token due to not decoded');
         }
         // @ts-ignore
         req.user = user;
