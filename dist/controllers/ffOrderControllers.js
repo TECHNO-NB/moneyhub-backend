@@ -25,12 +25,13 @@ const buyDiamondControllers = (0, asyncHandler_1.default)((req, res) => __awaite
         throw new apiError_1.default(false, 401, 'Please login first ');
     }
     const { ffUid, ffName, diamondPrice, diamondTitle } = req.body;
+    // @ts-nocheck
     if (!ffUid || !ffName || !diamondPrice || !diamondTitle) {
         throw new apiError_1.default(false, 400, 'Please fill all the fields ');
     }
     const orderData = {
         userId: userId,
-        ffUid: BigInt(JSON.stringify(ffUid)),
+        ffUid: ffUid,
         ffName: ffName,
         diamondPrice: diamondPrice,
         diamondTitle: JSON.stringify(diamondTitle),

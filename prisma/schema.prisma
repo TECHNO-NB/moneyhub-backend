@@ -37,7 +37,7 @@ model ffOrder {
   id           String   @id @default(cuid())
   user         User     @relation(fields: [userId], references: [id])
   userId       String
-  ffUid        BigInt
+  ffUid        String
   ffName       String
   diamondPrice Int
   diamondTitle String
