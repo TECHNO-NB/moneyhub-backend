@@ -22,36 +22,45 @@ const buyDiamondControllers = (0, asyncHandler_1.default)((req, res) => __awaite
     // @ts-ignore
     const userId = req === null || req === void 0 ? void 0 : req.user.id;
     if (!userId) {
-        throw new apiError_1.default(false, 401, 'Please login first ');
+        throw new apiError_1.default(false, 401, 'Please login first');
     }
     const { ffUid, ffName, diamondPrice, diamondTitle } = req.body;
-    // @ts-nocheck
     if (!ffUid || !ffName || !diamondPrice || !diamondTitle) {
-        throw new apiError_1.default(false, 400, 'Please fill all the fields ');
+        throw new apiError_1.default(false, 400, 'Please fill all the fields');
     }
-    const orderData = {
-        userId: userId,
-        ffUid: JSON.stringify(ffUid),
-        ffName: ffName,
-        diamondPrice: diamondPrice,
-        diamondTitle: JSON.stringify(diamondTitle),
-    };
-    const createOrder = yield db_1.default.ffOrder.create({
-        // @ts-ignore
-        data: orderData,
-    });
-    if (!createOrder) {
-        throw new apiError_1.default(false, 500, 'Failed to create order ');
-    }
-    const minusBalance = yield db_1.default.user.update({
+    // Step 1: Check balance
+    const user = yield db_1.default.user.findUnique({
         where: { id: userId },
-        data: { balance: { decrement: diamondPrice } },
+        select: { balance: true },
     });
-    if (!minusBalance) {
-        throw new apiError_1.default(false, 500, 'Failed to update balance ');
+    if (!user) {
+        throw new apiError_1.default(false, 404, 'User not found');
     }
+    if (user.balance < diamondPrice) {
+        throw new apiError_1.default(false, 400, 'Insufficient balance');
+    }
+    // Step 2: Transaction (create order + update balance)
+    const [createOrder, _] = yield db_1.default.$transaction([
+        db_1.default.ffOrder.create({
+            data: {
+                userId,
+                ffUid,
+                ffName,
+                diamondPrice,
+                diamondTitle: JSON.stringify(diamondTitle),
+            },
+        }),
+        db_1.default.user.update({
+            where: { id: userId },
+            data: {
+                balance: {
+                    decrement: diamondPrice,
+                },
+            },
+        }),
+    ]);
     return res
         .status(201)
-        .json(new apiResponse_1.default(true, 201, 'Order created successfully ', createOrder));
+        .json(new apiResponse_1.default(true, 201, 'Order created successfully', createOrder));
 }));
 exports.buyDiamondControllers = buyDiamondControllers;

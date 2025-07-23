@@ -170,6 +170,9 @@ const completeFfOrder = asyncHandler(async (req, res): Promise<any> => {
   }
 });
 
+// delete user 
+// const deleteUser=asyncHandler
+
 export {
   checkAllLoadBalanceScreenshot,
   loadCoinToUserWallet,

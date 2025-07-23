@@ -9,43 +9,54 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
   // @ts-ignore
   const userId = req?.user.id;
   if (!userId) {
-    throw new ApiError(false, 401, 'Please login first ');
+    throw new ApiError(false, 401, 'Please login first');
   }
 
   const { ffUid, ffName, diamondPrice, diamondTitle } = req.body;
 
-  // @ts-nocheck
-
   if (!ffUid || !ffName || !diamondPrice || !diamondTitle) {
-    throw new ApiError(false, 400, 'Please fill all the fields ');
-  }
-  const orderData: ffOrderTypes = {
-    userId: userId,
-    ffUid: ffUid,
-    ffName: ffName,
-    diamondPrice: diamondPrice,
-    diamondTitle: JSON.stringify(diamondTitle),
-  };
-  const createOrder = await prisma.ffOrder.create({
-    // @ts-ignore
-    data: orderData,
-  });
-
-  if (!createOrder) {
-    throw new ApiError(false, 500, 'Failed to create order ');
+    throw new ApiError(false, 400, 'Please fill all the fields');
   }
 
-  const minusBalance = await prisma.user.update({
+  // Step 1: Check balance
+  const user = await prisma.user.findUnique({
     where: { id: userId },
-    data: { balance: { decrement: diamondPrice } },
+    select: { balance: true },
   });
-  if (!minusBalance) {
-    throw new ApiError(false, 500, 'Failed to update balance ');
+
+  if (!user) {
+    throw new ApiError(false, 404, 'User not found');
   }
+
+  if (user.balance < diamondPrice) {
+    throw new ApiError(false, 400, 'Insufficient balance');
+  }
+
+  // Step 2: Transaction (create order + update balance)
+  const [createOrder, _] = await prisma.$transaction([
+    prisma.ffOrder.create({
+      data: {
+        userId,
+        ffUid,
+        ffName,
+        diamondPrice,
+        diamondTitle: JSON.stringify(diamondTitle),
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        balance: {
+          decrement: diamondPrice,
+        },
+      },
+    }),
+  ]);
 
   return res
     .status(201)
-    .json(new ApiResponse(true, 201, 'Order created successfully ', createOrder));
+    .json(new ApiResponse(true, 201, 'Order created successfully', createOrder));
 });
+
 
 export { buyDiamondControllers };
