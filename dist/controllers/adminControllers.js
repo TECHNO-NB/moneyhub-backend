@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
@@ -95,7 +95,11 @@ const loadCoinToUserWallet = (0, asyncHandler_1.default)((req, res) => __awaiter
 exports.loadCoinToUserWallet = loadCoinToUserWallet;
 // fetch all user details
 const getAllUserDetails = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const allUser = yield db_1.default.user.findMany();
+    const allUser = yield db_1.default.user.findMany({
+        orderBy: {
+            updatedAt: 'desc',
+        },
+    });
     if (!allUser) {
         throw new apiError_1.default(false, 500, 'Unable to fetch all user');
     }
@@ -112,6 +116,7 @@ const allFfOrderControllers = (0, asyncHandler_1.default)((req, res) => __awaite
             user: {
                 select: {
                     fullName: true,
+                    balance: true,
                 },
             },
         },
@@ -174,3 +179,121 @@ const completeFfOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void
     }
 }));
 exports.completeFfOrder = completeFfOrder;
+// delete user
+const deleteUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { id } = req.user;
+    const { userId } = req.params;
+    if (!id) {
+        throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
+    }
+    if (!userId) {
+        throw new apiError_1.default(false, 400, 'invalid user id');
+    }
+    if (id === userId) {
+        throw new apiError_1.default(false, 500, 'User can not delete himself');
+    }
+    const user = yield db_1.default.user.delete({
+        where: {
+            id: userId,
+        },
+    });
+    if (!user) {
+        throw new apiError_1.default(false, 404, 'User not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'User deleted successfully', user));
+}));
+exports.deleteUser = deleteUser;
+// change user role
+const changeUserRole = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { id } = req.user;
+    const { userId } = req.params;
+    const { newRole } = req.body;
+    if (!id) {
+        throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
+    }
+    if (!userId) {
+        throw new apiError_1.default(false, 400, 'invalid user id');
+    }
+    if (!newRole) {
+        throw new apiError_1.default(false, 400, 'invalid new role');
+    }
+    const updateRole = yield db_1.default.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            role: newRole,
+        },
+    });
+    if (!updateRole) {
+        throw new apiError_1.default(false, 404, 'User not found');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'User role changes successfully', updateRole));
+}));
+exports.changeUserRole = changeUserRole;
+// add coin to user by admin himself after cash payment
+const addCoinToUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { id } = req.user;
+    const { userId } = req.params;
+    const { coin } = req.body;
+    if (!id) {
+        throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
+    }
+    if (!userId) {
+        throw new apiError_1.default(false, 400, 'invalid user id');
+    }
+    if (!coin) {
+        throw new apiError_1.default(false, 400, 'invalid coin amount');
+    }
+    const addCoin = yield db_1.default.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            balance: {
+                increment: coin,
+            },
+        },
+    });
+    if (!addCoin) {
+        throw new apiError_1.default(false, 404, 'User not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin added successfully', addCoin));
+}));
+exports.addCoinToUser = addCoinToUser;
+// removed coin from user balance
+const removeCoinFromUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { id } = req.user;
+    const { userId } = req.params;
+    const { coin } = req.body;
+    if (!id) {
+        throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
+    }
+    if (!userId) {
+        throw new apiError_1.default(false, 400, 'invalid user id');
+    }
+    if (!coin) {
+        throw new apiError_1.default(false, 400, 'invalid coin amount');
+    }
+    const removeCoin = yield db_1.default.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            balance: {
+                decrement: coin,
+            },
+        },
+    });
+    if (!removeCoin) {
+        throw new apiError_1.default(false, 404, 'User not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin added successfully', removeCoin));
+}));
+exports.removeCoinFromUser = removeCoinFromUser;

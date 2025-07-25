@@ -88,7 +88,11 @@ const loadCoinToUserWallet = asyncHandler(async (req, res): Promise<any> => {
 
 // fetch all user details
 const getAllUserDetails = asyncHandler(async (req, res): Promise<any> => {
-  const allUser = await prisma.user.findMany();
+  const allUser = await prisma.user.findMany({
+    orderBy: {
+      updatedAt: 'desc',
+    },
+  });
   if (!allUser) {
     throw new ApiError(false, 500, 'Unable to fetch all user');
   }
@@ -105,6 +109,7 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
       user: {
         select: {
           fullName: true,
+          balance: true,
         },
       },
     },
@@ -170,8 +175,130 @@ const completeFfOrder = asyncHandler(async (req, res): Promise<any> => {
   }
 });
 
-// delete user 
-// const deleteUser=asyncHandler
+// delete user
+const deleteUser = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { id } = req.user;
+  const { userId } = req.params;
+
+  if (!id) {
+    throw new ApiError(false, 401, 'invalid user id should login with admin');
+  }
+  if (!userId) {
+    throw new ApiError(false, 400, 'invalid user id');
+  }
+
+  if (id === userId) {
+    throw new ApiError(false, 500, 'User can not delete himself');
+  }
+
+  const user = await prisma.user.delete({
+    where: {
+      id: userId,
+    },
+  });
+  if (!user) {
+    throw new ApiError(false, 404, 'User not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'User deleted successfully', user));
+});
+
+// change user role
+const changeUserRole = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { id } = req.user;
+  const { userId } = req.params;
+  const { newRole } = req.body;
+
+  if (!id) {
+    throw new ApiError(false, 401, 'invalid user id should login with admin');
+  }
+  if (!userId) {
+    throw new ApiError(false, 400, 'invalid user id');
+  }
+  if (!newRole) {
+    throw new ApiError(false, 400, 'invalid new role');
+  }
+
+  const updateRole = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      role: newRole,
+    },
+  });
+  if (!updateRole) {
+    throw new ApiError(false, 404, 'User not found');
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'User role changes successfully', updateRole));
+});
+
+// add coin to user by admin himself after cash payment
+const addCoinToUser = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { id } = req.user;
+  const { userId } = req.params;
+  const { coin } = req.body;
+  if (!id) {
+    throw new ApiError(false, 401, 'invalid user id should login with admin');
+  }
+  if (!userId) {
+    throw new ApiError(false, 400, 'invalid user id');
+  }
+  if (!coin) {
+    throw new ApiError(false, 400, 'invalid coin amount');
+  }
+  const addCoin = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      balance: {
+        increment: coin,
+      },
+    },
+  });
+  if (!addCoin) {
+    throw new ApiError(false, 404, 'User not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Coin added successfully', addCoin));
+});
+
+// removed coin from user balance
+const removeCoinFromUser = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { id } = req.user;
+  const { userId } = req.params;
+  const { coin } = req.body;
+   if (!id) {
+    throw new ApiError(false, 401, 'invalid user id should login with admin');
+  }
+  if (!userId) {
+    throw new ApiError(false, 400, 'invalid user id');
+  }
+  if (!coin) {
+    throw new ApiError(false, 400, 'invalid coin amount');
+  }
+  const removeCoin = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      balance: {
+        decrement: coin,
+      },
+    },
+  });
+  if (!removeCoin) {
+    throw new ApiError(false, 404, 'User not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Coin added successfully', removeCoin));
+  });
+ 
+
 
 export {
   checkAllLoadBalanceScreenshot,
@@ -179,4 +306,8 @@ export {
   getAllUserDetails,
   allFfOrderControllers,
   completeFfOrder,
+  deleteUser,
+  changeUserRole,
+  addCoinToUser,
+  removeCoinFromUser
 };

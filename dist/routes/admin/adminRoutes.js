@@ -12,4 +12,8 @@ router.route('/update-balance/:orderId').patch(authMiddleware_1.isAdmin, adminCo
 router.route('/get-alluser').get(authMiddleware_1.isAdmin, adminControllers_1.getAllUserDetails);
 router.route('/get-allfforder').get(authMiddleware_1.isAdminSubAdmin, adminControllers_1.allFfOrderControllers);
 router.route('/complete-fforder/:orderId').post(authMiddleware_1.isAdminSubAdmin, adminControllers_1.completeFfOrder);
+router.route('/delete-user/:userId').delete(authMiddleware_1.isAdmin, adminControllers_1.deleteUser);
+router.route('/change-role/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.changeUserRole);
+router.route('/add-coin/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.addCoinToUser);
+router.route('/remove-coin/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.removeCoinFromUser);
 exports.default = router;
