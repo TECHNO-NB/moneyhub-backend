@@ -109,4 +109,14 @@ const logoutUserControllers = asyncHandler(async (req: Request, res: Response): 
     .json(new ApiResponse(true, 200, 'User logout successfully'));
 });
 
-export { signInControllers, verifyUserControllers,logoutUserControllers };
+// Get all ff topup list
+const getAllFfTopUpListControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+   const getAllFfTopUpList=await prisma.ffTopUpRate.findMany();
+
+   if(!getAllFfTopUpList){
+    throw new ApiError(false, 404, 'No ff top up list found');
+   }
+   return res.status(200).json(new ApiResponse(true, 200, 'Get all ff topup list',getAllFfTopUpList))
+    
+});
+export { signInControllers, verifyUserControllers,logoutUserControllers,getAllFfTopUpListControllers };

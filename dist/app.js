@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,7 +42,7 @@ app.use('/api/v1/balance', balanceRoutes_1.default);
 app.use('/api/v1/admin', adminRoutes_1.default);
 app.use('/api/v1/fforder', ffOrderRoutes_1.default);
 // server check api
-app.get("/", (req, res) => {
-    res.send("MoneyHub Server is running");
-});
+app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.send('MoneyHub Server is running');
+}));
 exports.default = app;
