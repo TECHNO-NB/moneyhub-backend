@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
+exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const db_1 = __importDefault(require("../DB/db"));
@@ -117,6 +117,19 @@ const getAllFfTopUpListControllers = (0, asyncHandler_1.default)((req, res) => _
     if (!getAllFfTopUpList) {
         throw new apiError_1.default(false, 404, 'No ff top up list found');
     }
-    return res.status(200).json(new apiResponse_1.default(true, 200, 'Get all ff topup list', getAllFfTopUpList));
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Get all ff topup list', getAllFfTopUpList));
 }));
 exports.getAllFfTopUpListControllers = getAllFfTopUpListControllers;
+// get all ff tournament
+const getAllFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const getAllFfTournament = yield db_1.default.ffTournament.findMany();
+    if (!getAllFfTournament) {
+        throw new apiError_1.default(false, 404, 'No ff tournament found');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Get all ff tournament', getAllFfTournament));
+}));
+exports.getAllFfTournamentControllers = getAllFfTournamentControllers;

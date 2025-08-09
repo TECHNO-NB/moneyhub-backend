@@ -16,4 +16,5 @@ router.route('/delete-user/:userId').delete(authMiddleware_1.isAdmin, adminContr
 router.route('/change-role/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.changeUserRole);
 router.route('/add-coin/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.addCoinToUser);
 router.route('/remove-coin/:userId').patch(authMiddleware_1.isAdmin, adminControllers_1.removeCoinFromUser);
+router.route('/create-ff-tournament').post(authMiddleware_1.isAdminSubAdmin, adminControllers_1.createFreeFireTournament);
 exports.default = router;

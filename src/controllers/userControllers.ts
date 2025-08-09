@@ -110,13 +110,36 @@ const logoutUserControllers = asyncHandler(async (req: Request, res: Response): 
 });
 
 // Get all ff topup list
-const getAllFfTopUpListControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
-   const getAllFfTopUpList=await prisma.ffTopUpRate.findMany();
+const getAllFfTopUpListControllers = asyncHandler(
+  async (req: Request, res: Response): Promise<any> => {
+    const getAllFfTopUpList = await prisma.ffTopUpRate.findMany();
 
-   if(!getAllFfTopUpList){
-    throw new ApiError(false, 404, 'No ff top up list found');
-   }
-   return res.status(200).json(new ApiResponse(true, 200, 'Get all ff topup list',getAllFfTopUpList))
-    
-});
-export { signInControllers, verifyUserControllers,logoutUserControllers,getAllFfTopUpListControllers };
+    if (!getAllFfTopUpList) {
+      throw new ApiError(false, 404, 'No ff top up list found');
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(true, 200, 'Get all ff topup list', getAllFfTopUpList));
+  }
+);
+
+// get all ff tournament
+const getAllFfTournamentControllers = asyncHandler(
+  async (req: Request, res: Response): Promise<any> => {
+    const getAllFfTournament = await prisma.ffTournament.findMany();
+    if (!getAllFfTournament) {
+      throw new ApiError(false, 404, 'No ff tournament found');
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(true, 200, 'Get all ff tournament', getAllFfTournament));
+  }
+);
+
+export {
+  signInControllers,
+  verifyUserControllers,
+  logoutUserControllers,
+  getAllFfTopUpListControllers,
+  getAllFfTournamentControllers
+};

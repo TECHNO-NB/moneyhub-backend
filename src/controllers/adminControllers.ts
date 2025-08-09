@@ -273,7 +273,7 @@ const removeCoinFromUser = asyncHandler(async (req, res): Promise<any> => {
   const { id } = req.user;
   const { userId } = req.params;
   const { coin } = req.body;
-   if (!id) {
+  if (!id) {
     throw new ApiError(false, 401, 'invalid user id should login with admin');
   }
   if (!userId) {
@@ -296,9 +296,38 @@ const removeCoinFromUser = asyncHandler(async (req, res): Promise<any> => {
     throw new ApiError(false, 404, 'User not found');
   }
   return res.status(200).json(new ApiResponse(true, 200, 'Coin added successfully', removeCoin));
-  });
- 
+});
 
+// create freefire tournament
+const createFreeFireTournament = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { id } = req.user;
+  if (!id) {
+    throw new ApiError(false, 401, 'invalid user id should login with admin');
+  }
+  const { title, time, owner, ammo, skill, reward, cost } = req.body;
+  const convertedReward = parseInt(reward);
+  const convertedCost = parseInt(cost);
+  if (!title || !time || !owner || !reward || !cost) {
+    throw new ApiError(false, 400, 'invalid tournament details');
+  }
+  const tournament = await prisma.ffTournament.create({
+    data: {
+      userId: id,
+      title,
+      time: new Date(time),
+      owner,
+      ammo,
+      skill,
+      reward: convertedReward,
+      cost: convertedCost,
+    },
+  });
+  if (!tournament) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Tournament created successfully'));
+});
 
 export {
   checkAllLoadBalanceScreenshot,
@@ -309,5 +338,6 @@ export {
   deleteUser,
   changeUserRole,
   addCoinToUser,
-  removeCoinFromUser
+  removeCoinFromUser,
+  createFreeFireTournament,
 };

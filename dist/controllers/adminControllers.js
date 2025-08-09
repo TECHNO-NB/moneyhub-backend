@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
@@ -297,3 +297,34 @@ const removeCoinFromUser = (0, asyncHandler_1.default)((req, res) => __awaiter(v
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin added successfully', removeCoin));
 }));
 exports.removeCoinFromUser = removeCoinFromUser;
+// create freefire tournament
+const createFreeFireTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { id } = req.user;
+    if (!id) {
+        throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
+    }
+    const { title, time, owner, ammo, skill, reward, cost } = req.body;
+    const convertedReward = parseInt(reward);
+    const convertedCost = parseInt(cost);
+    if (!title || !time || !owner || !reward || !cost) {
+        throw new apiError_1.default(false, 400, 'invalid tournament details');
+    }
+    const tournament = yield db_1.default.ffTournament.create({
+        data: {
+            userId: id,
+            title,
+            time: new Date(time),
+            owner,
+            ammo,
+            skill,
+            reward: convertedReward,
+            cost: convertedCost,
+        },
+    });
+    if (!tournament) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Tournament created successfully'));
+}));
+exports.createFreeFireTournament = createFreeFireTournament;
