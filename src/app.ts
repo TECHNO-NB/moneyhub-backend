@@ -6,7 +6,7 @@ import signInRoutes from './routes/userRoutes';
 import balanceRoutes from './routes/balanceRoutes';
 import checkPayment from './routes/admin/adminRoutes';
 import fforder from './routes/ffOrderRoutes';
-import prisma from './DB/db';
+import ffTournamentRoute from './routes/ffTournamentRoutes';
 
 const app = express();
 
@@ -37,6 +37,7 @@ app.use('/api/v1/users', signInRoutes);
 app.use('/api/v1/balance', balanceRoutes);
 app.use('/api/v1/admin', checkPayment);
 app.use('/api/v1/fforder', fforder);
+app.use('/api/v1/tournament', ffTournamentRoute);
 
 // server check api
 app.get('/', async (req, res) => {

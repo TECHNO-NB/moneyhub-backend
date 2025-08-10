@@ -57,16 +57,18 @@ model ffTopUpRate {
 }
 
 model ffTournament {
-  id      String   @id @default(cuid())
-  title   String
-  time    DateTime
-  owner   String
-  creator User     @relation(fields: [userId], references: [id])
-  userId  String
-  ammo    Boolean  @default(false)
-  skill   Boolean  @default(false)
-  reward  Int      @default(0)
-  cost    Int      @default(0)
+  id                  String                @id @default(cuid())
+  title               String
+  time                DateTime
+  owner               String
+  creator             User                  @relation(fields: [userId], references: [id])
+  userId              String
+  ammo                Boolean               @default(false)
+  skill               Boolean               @default(false)
+  reward              Int                   @default(0)
+  cost                Int                   @default(0)
+  roomId              String?
+  password            String?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @default(now()) @updatedAt
   enteredFfTournament enteredFfTournament[]
@@ -82,7 +84,6 @@ model enteredFfTournament {
   isWinner     Boolean      @default(false)
   status       Status       @default(pending)
   message      String       @default("Your tournament is being processed Enter at the time.")
-  player       Int          @default(0)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @default(now()) @updatedAt
 }

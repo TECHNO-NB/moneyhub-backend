@@ -20,6 +20,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const balanceRoutes_1 = __importDefault(require("./routes/balanceRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/admin/adminRoutes"));
 const ffOrderRoutes_1 = __importDefault(require("./routes/ffOrderRoutes"));
+const ffTournamentRoutes_1 = __importDefault(require("./routes/ffTournamentRoutes"));
 const app = (0, express_1.default)();
 // default middleware
 app.use((0, cors_1.default)({
@@ -41,6 +42,7 @@ app.use('/api/v1/users', userRoutes_1.default);
 app.use('/api/v1/balance', balanceRoutes_1.default);
 app.use('/api/v1/admin', adminRoutes_1.default);
 app.use('/api/v1/fforder', ffOrderRoutes_1.default);
+app.use('/api/v1/tournament', ffTournamentRoutes_1.default);
 // server check api
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.send('MoneyHub Server is running');

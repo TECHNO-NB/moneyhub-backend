@@ -61,6 +61,11 @@ const checkStatusNotificationOfBalance = asyncHandler(
       orderBy: { updatedAt: 'desc' },
     });
 
+     const tournament = await prisma.enteredFfTournament.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: 'desc' },
+    });
+
     // If both empty
     if (!loadBalance.length && !ffOrders.length) {
       throw new ApiError(false, 400, 'No load balance or FF orders found');
@@ -70,6 +75,7 @@ const checkStatusNotificationOfBalance = asyncHandler(
       new ApiResponse(true, 200, 'Notifications found', {
         loadBalance,
         ffOrders,
+        tournament
       })
     );
   }
