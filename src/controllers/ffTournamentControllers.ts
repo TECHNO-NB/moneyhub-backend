@@ -53,6 +53,18 @@ const joinFfTournamentControllers = asyncHandler(async (req, res): Promise<any> 
     throw new ApiError(false, 400, 'Low balance');
   }
 
+  const updateBalance = await prisma.user.update({
+    where: { id: id },
+    data: {
+      balance: {
+        decrement: cost,
+      },
+    },
+  });
+  if(!updateBalance){
+    throw new ApiError(false, 400, 'Failed to update balance');
+  }
+
   const joinTournament = await prisma.enteredFfTournament.create({
     data: {
       userId: id,

@@ -60,6 +60,17 @@ const joinFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => __
     if (((_a = findUserCoin.balance) !== null && _a !== void 0 ? _a : 0) < cost) {
         throw new apiError_1.default(false, 400, 'Low balance');
     }
+    const updateBalance = yield db_1.default.user.update({
+        where: { id: id },
+        data: {
+            balance: {
+                decrement: cost,
+            },
+        },
+    });
+    if (!updateBalance) {
+        throw new apiError_1.default(false, 400, 'Failed to update balance');
+    }
     const joinTournament = yield db_1.default.enteredFfTournament.create({
         data: {
             userId: id,
