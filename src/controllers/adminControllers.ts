@@ -329,6 +329,83 @@ const createFreeFireTournament = asyncHandler(async (req, res): Promise<any> => 
   return res.status(200).json(new ApiResponse(true, 200, 'Tournament created successfully'));
 });
 
+// get all tournament
+const getAllTournament = asyncHandler(async (req, res): Promise<any> => {
+  const getAllTournament = await prisma.ffTournament.findMany({
+    include: {
+      enteredFfTournament: true,
+    },
+     orderBy: {
+      updatedAt: 'desc',
+    },
+  });
+  if (!getAllTournament) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'Successfully get all tournament', getAllTournament));
+});
+
+// add roomId and Password in ff tournament
+const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { tournamentId } = req.params;
+
+  const { roomId, password } = req.body;
+
+
+  if (!tournamentId) {
+    throw new ApiError(false, 404, 'tournament id not found');
+  }
+  if (!roomId || !password) {
+    throw new ApiError(false, 400, 'invalid room id and password');
+  }
+
+  const updateRoomIdAndPassword = await prisma.ffTournament.update({
+    where: {
+      id: tournamentId,
+    },
+    data: {
+      roomId,
+      password,
+    },
+  });
+  if (!updateRoomIdAndPassword) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Room id and password'));
+});
+
+// delete the tournament
+const deleteTournament = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { tournamentId } = req.params;
+  const deleteTournament = await prisma.ffTournament.delete({
+    where: {
+      id: tournamentId,
+    },
+  });
+  if (!deleteTournament) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Successfully delete tournament'));
+});
+
+// make the tournament winner
+// const makeWinnerInTournament = asyncHandler(async (req, res): Promise<any> => {
+//   // @ts-ignore
+//   const { userId } = req.params;
+//   const deleteTournament = await prisma.ffTournament.delete({
+//     where: {
+//       id: tournamentId,
+//     },
+//   });
+//   if (!deleteTournament) {
+//     throw new ApiError(false, 404, 'Tournament not found');
+//   }
+//   return res.status(200).json(new ApiResponse(true, 200, 'Successfully delete tournament'));
+// });
 export {
   checkAllLoadBalanceScreenshot,
   loadCoinToUserWallet,
@@ -340,4 +417,7 @@ export {
   addCoinToUser,
   removeCoinFromUser,
   createFreeFireTournament,
+  addRoomIdAndPassword,
+  getAllTournament,
+  deleteTournament,
 };

@@ -76,7 +76,7 @@ model ffTournament {
 
 model enteredFfTournament {
   id           String       @id @default(cuid())
-  fftournament ffTournament @relation(fields: [tournamentId], references: [id])
+  fftournament ffTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId String
   gameName     String
   user         User         @relation(fields: [userId], references: [id])

@@ -124,7 +124,11 @@ const getAllFfTopUpListControllers = (0, asyncHandler_1.default)((req, res) => _
 exports.getAllFfTopUpListControllers = getAllFfTopUpListControllers;
 // get all ff tournament
 const getAllFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const getAllFfTournament = yield db_1.default.ffTournament.findMany();
+    const getAllFfTournament = yield db_1.default.ffTournament.findMany({
+        orderBy: {
+            updatedAt: 'desc',
+        },
+    });
     if (!getAllFfTournament) {
         throw new apiError_1.default(false, 404, 'No ff tournament found');
     }

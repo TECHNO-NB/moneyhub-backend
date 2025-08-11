@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
@@ -328,3 +328,62 @@ const createFreeFireTournament = (0, asyncHandler_1.default)((req, res) => __awa
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Tournament created successfully'));
 }));
 exports.createFreeFireTournament = createFreeFireTournament;
+// get all tournament
+const getAllTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const getAllTournament = yield db_1.default.ffTournament.findMany({
+        include: {
+            enteredFfTournament: true,
+        },
+        orderBy: {
+            updatedAt: 'desc',
+        },
+    });
+    if (!getAllTournament) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Successfully get all tournament', getAllTournament));
+}));
+exports.getAllTournament = getAllTournament;
+// add roomId and Password in ff tournament
+const addRoomIdAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { tournamentId } = req.params;
+    const { roomId, password } = req.body;
+    if (!tournamentId) {
+        throw new apiError_1.default(false, 404, 'tournament id not found');
+    }
+    if (!roomId || !password) {
+        throw new apiError_1.default(false, 400, 'invalid room id and password');
+    }
+    const updateRoomIdAndPassword = yield db_1.default.ffTournament.update({
+        where: {
+            id: tournamentId,
+        },
+        data: {
+            roomId,
+            password,
+        },
+    });
+    if (!updateRoomIdAndPassword) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Room id and password'));
+}));
+exports.addRoomIdAndPassword = addRoomIdAndPassword;
+// delete the tournament
+const deleteTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { tournamentId } = req.params;
+    const deleteTournament = yield db_1.default.ffTournament.delete({
+        where: {
+            id: tournamentId,
+        },
+    });
+    if (!deleteTournament) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully delete tournament'));
+}));
+exports.deleteTournament = deleteTournament;

@@ -126,7 +126,11 @@ const getAllFfTopUpListControllers = asyncHandler(
 // get all ff tournament
 const getAllFfTournamentControllers = asyncHandler(
   async (req: Request, res: Response): Promise<any> => {
-    const getAllFfTournament = await prisma.ffTournament.findMany();
+    const getAllFfTournament = await prisma.ffTournament.findMany({
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
     if (!getAllFfTournament) {
       throw new ApiError(false, 404, 'No ff tournament found');
     }
@@ -141,5 +145,5 @@ export {
   verifyUserControllers,
   logoutUserControllers,
   getAllFfTopUpListControllers,
-  getAllFfTournamentControllers
+  getAllFfTournamentControllers,
 };

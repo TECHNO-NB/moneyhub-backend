@@ -61,7 +61,7 @@ const joinFfTournamentControllers = asyncHandler(async (req, res): Promise<any> 
       },
     },
   });
-  if(!updateBalance){
+  if (!updateBalance) {
     throw new ApiError(false, 400, 'Failed to update balance');
   }
 
@@ -86,13 +86,29 @@ const showAllreadyEnteredTournament = asyncHandler(async (req, res): Promise<any
   // @ts-ignore
   const { id } = req.user;
 
+
   if (!id) {
     throw new ApiError(false, 401, 'Unauthorized');
   }
   const findUserEnteredTournament = await prisma.ffTournament.findMany({
     where: {
-      enteredFfTournament: id,
+      enteredFfTournament: {
+        some: {
+          userId: id,
+        },
+      },
     },
+    include: {
+      enteredFfTournament: {
+        where: {
+          userId: id,
+        },
+      },
+    },
+     orderBy: {
+      updatedAt: 'desc',
+    },
+    
   });
 
   return res
