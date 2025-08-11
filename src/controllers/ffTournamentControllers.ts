@@ -91,7 +91,7 @@ const showAllreadyEnteredTournament = asyncHandler(async (req, res): Promise<any
   }
   const findUserEnteredTournament = await prisma.ffTournament.findMany({
     where: {
-      userId: id,
+      enteredFfTournament: id,
     },
   });
 

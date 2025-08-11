@@ -95,7 +95,7 @@ const showAllreadyEnteredTournament = (0, asyncHandler_1.default)((req, res) => 
     }
     const findUserEnteredTournament = yield db_1.default.ffTournament.findMany({
         where: {
-            userId: id,
+            enteredFfTournament: id,
         },
     });
     return res
