@@ -21,6 +21,7 @@ const balanceRoutes_1 = __importDefault(require("./routes/balanceRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/admin/adminRoutes"));
 const ffOrderRoutes_1 = __importDefault(require("./routes/ffOrderRoutes"));
 const ffTournamentRoutes_1 = __importDefault(require("./routes/ffTournamentRoutes"));
+const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const app = (0, express_1.default)();
 // default middleware
 app.use((0, cors_1.default)({
@@ -37,6 +38,37 @@ app.use(body_parser_1.default.urlencoded({
     limit: '5mb',
 }));
 app.use(express_1.default.static('./public'));
+// firebase service
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// firebase admin sdk
+firebase_admin_1.default.initializeApp({
+    credential: firebase_admin_1.default.credential.cert(serviceAccount),
+});
+// notification end point
+app.post('/send-notification', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token, title, body } = req.body;
+    // Basic validation to ensure all required fields are present.
+    if (!token || !title || !body) {
+        return res.status(400).send({ error: 'Missing required fields: token, title, body' });
+    }
+    const message = {
+        notification: {
+            title: title,
+            body: body,
+        },
+        token: token
+    };
+    try {
+        // Send the message using the Firebase Admin SDK.
+        const response = yield firebase_admin_1.default.messaging().send(message);
+        console.log('Successfully sent message:', response);
+        res.status(200).send({ success: true, messageId: response });
+    }
+    catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).send({ success: false, error: error.message });
+    }
+}));
 // user routes api
 app.use('/api/v1/users', userRoutes_1.default);
 app.use('/api/v1/balance', balanceRoutes_1.default);

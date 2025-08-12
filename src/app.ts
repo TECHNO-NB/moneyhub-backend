@@ -7,6 +7,7 @@ import balanceRoutes from './routes/balanceRoutes';
 import checkPayment from './routes/admin/adminRoutes';
 import fforder from './routes/ffOrderRoutes';
 import ffTournamentRoute from './routes/ffTournamentRoutes';
+import admin from 'firebase-admin';
 
 const app = express();
 
@@ -31,6 +32,42 @@ app.use(
   })
 );
 app.use(express.static('./public'));
+
+// firebase service
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
+
+// firebase admin sdk
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+// notification end point
+app.post('/send-notification', async (req, res) => {
+  const { token, title, body } = req.body;
+
+  // Basic validation to ensure all required fields are present.
+  if (!token || !title || !body) {
+    return res.status(400).send({ error: 'Missing required fields: token, title, body' });
+  }
+
+  const message = {
+    notification: {
+      title: title,
+      body: body,
+    },
+    token: token
+  };
+
+  try {
+    // Send the message using the Firebase Admin SDK.
+    const response = await admin.messaging().send(message);
+    console.log('Successfully sent message:', response);
+    res.status(200).send({ success: true, messageId: response });
+  } catch (error:any) {
+    console.error('Error sending message:', error);
+    res.status(500).send({ success: false, error: error.message });
+  }
+});
 
 // user routes api
 app.use('/api/v1/users', signInRoutes);
