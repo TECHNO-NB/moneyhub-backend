@@ -32,11 +32,15 @@ const joinFfTournamentControllers = asyncHandler(async (req, res): Promise<any> 
   if (!tournament?.id && !tournament?.title) {
     throw new ApiError(false, 404, 'Tournament not found');
   }
-  if (tournament?.enteredFfTournament.length > 50) {
-    throw new ApiError(false, 400, 'Tournament is full');
-  }
 
-  if (tournament?.enteredFfTournament.length > 50) {
+  const alreadyEntered = tournament.enteredFfTournament.some((entry: { userId: string }) => {
+    return entry.userId === id;
+  });
+
+  if (alreadyEntered) {
+    throw new ApiError(false, 409, 'You are already in this tournament');
+  }
+  if (tournament?.enteredFfTournament.length > 48) {
     throw new ApiError(false, 400, 'Tournament is full');
   }
 

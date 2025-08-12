@@ -43,10 +43,13 @@ const joinFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => __
     if (!(tournament === null || tournament === void 0 ? void 0 : tournament.id) && !(tournament === null || tournament === void 0 ? void 0 : tournament.title)) {
         throw new apiError_1.default(false, 404, 'Tournament not found');
     }
-    if ((tournament === null || tournament === void 0 ? void 0 : tournament.enteredFfTournament.length) > 50) {
-        throw new apiError_1.default(false, 400, 'Tournament is full');
+    const alreadyEntered = tournament.enteredFfTournament.some((entry) => {
+        return entry.userId === id;
+    });
+    if (alreadyEntered) {
+        throw new apiError_1.default(false, 409, 'You are already in this tournament');
     }
-    if ((tournament === null || tournament === void 0 ? void 0 : tournament.enteredFfTournament.length) > 50) {
+    if ((tournament === null || tournament === void 0 ? void 0 : tournament.enteredFfTournament.length) > 48) {
         throw new apiError_1.default(false, 400, 'Tournament is full');
     }
     const findUserCoin = yield db_1.default.user.findUnique({
