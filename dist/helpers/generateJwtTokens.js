@@ -21,11 +21,11 @@ const generateRefreshAccessToken = (userData) => __awaiter(void 0, void 0, void 
         role: userData.role,
         fullName: userData.fullName,
         balance: userData.balance,
-    }, process.env.JWT_REFRESH_TOKEN_SECRET, { expiresIn: '8d' });
+    }, process.env.JWT_REFRESH_TOKEN_SECRET, { expiresIn: '62d' });
     const accessToken = jsonwebtoken_1.default.sign({
         id: userData.id,
         email: userData.email,
-    }, process.env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: '8d' });
+    }, process.env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: '62d' });
     const isUpdate = yield db_1.default.user.update({
         where: { id: userData.id },
         data: { refreshToken },

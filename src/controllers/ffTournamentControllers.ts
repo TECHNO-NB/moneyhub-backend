@@ -32,6 +32,9 @@ const joinFfTournamentControllers = asyncHandler(async (req, res): Promise<any> 
   if (!tournament?.id && !tournament?.title) {
     throw new ApiError(false, 404, 'Tournament not found');
   }
+  if (tournament?.enteredFfTournament.length > 50) {
+    throw new ApiError(false, 400, 'Tournament is full');
+  }
 
   if (tournament?.enteredFfTournament.length > 50) {
     throw new ApiError(false, 400, 'Tournament is full');
@@ -86,7 +89,6 @@ const showAllreadyEnteredTournament = asyncHandler(async (req, res): Promise<any
   // @ts-ignore
   const { id } = req.user;
 
-
   if (!id) {
     throw new ApiError(false, 401, 'Unauthorized');
   }
@@ -105,10 +107,9 @@ const showAllreadyEnteredTournament = asyncHandler(async (req, res): Promise<any
         },
       },
     },
-     orderBy: {
+    orderBy: {
       updatedAt: 'desc',
     },
-    
   });
 
   return res

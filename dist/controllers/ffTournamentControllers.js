@@ -46,6 +46,9 @@ const joinFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => __
     if ((tournament === null || tournament === void 0 ? void 0 : tournament.enteredFfTournament.length) > 50) {
         throw new apiError_1.default(false, 400, 'Tournament is full');
     }
+    if ((tournament === null || tournament === void 0 ? void 0 : tournament.enteredFfTournament.length) > 50) {
+        throw new apiError_1.default(false, 400, 'Tournament is full');
+    }
     const findUserCoin = yield db_1.default.user.findUnique({
         where: {
             id: id,
