@@ -1,9 +1,40 @@
+import { Request, Response } from 'express';
 import { admin } from '../app';
 import prisma from '../DB/db';
 import ApiError from '../utils/apiError';
 import ApiResponse from '../utils/apiResponse';
 import asyncHandler from '../utils/asyncHandler';
 import { deleteCloudinaryImage } from '../utils/cloudinary';
+
+
+const sendNotification = async (
+  token: string | null | undefined,
+  title: string,
+  body: string,
+  link?: string
+) => {
+  if (!token) return; // No token, skip sending
+
+  const message = {
+    notification: { title, body },
+    token,
+    webpush: {
+      fcmOptions: {
+        link: link || "https://moneyhub.store", // default link
+      },
+    },
+  };
+
+  try {
+    // @ts-ignore
+    await admin.messaging().send(message);
+  } catch (error) {
+    console.error("Notification send failed:", error);
+  }
+};
+
+
+
 
 // check  All load balance screenshot
 const checkAllLoadBalanceScreenshot = asyncHandler(async (req, res): Promise<any> => {
@@ -75,6 +106,7 @@ const loadCoinToUserWallet = asyncHandler(async (req, res): Promise<any> => {
     if (!updateUserAmount) {
       throw new ApiError(false, 500, 'invalid user id');
     }
+    await sendNotification(updateUserAmount.token,message,"Thank you for load coin.");
     const deleteScreeshot = await deleteCloudinaryImage(paymentScreenshot);
 
     if (!deleteScreeshot) {
@@ -125,70 +157,44 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
 });
 
 // ff order fullfill
-const completeFfOrder = asyncHandler(async (req, res): Promise<any> => {
+const completeFfOrder = asyncHandler(async (req: Request, res: Response):Promise<any> => {
   const { message, status, userId } = req.body;
   const { orderId } = req.params;
 
-  if (!orderId) {
-    throw new ApiError(false, 500, 'orderId is required');
-  }
+  if (!orderId) throw new ApiError(false, 400, "orderId is required");
+  if (!message || !status || !userId) throw new ApiError(false, 400, "Invalid request body");
 
-  if (!message || !status || !userId) {
-    throw new ApiError(false, 500, 'invalid request body');
-  }
-
-  const findFfOrder = await prisma.ffOrder.update({
-    where: {
-      id: orderId,
-    },
-    data: {
-      status,
-      message,
-    },
+  const ffOrder = await prisma.ffOrder.update({
+    where: { id: orderId },
+    data: { status, message },
   });
-  if (!findFfOrder) {
-    throw new ApiError(false, 500, 'invalid order id');
+
+  if (!ffOrder) throw new ApiError(false, 404, "Invalid order ID");
+
+  const userData = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (status === "delivered") {
+    await sendNotification(
+      userData?.token,
+      "Your diamond top-up is delivered.",
+      "Thank you for your top-up!"
+    );
+    return res.status(200).json(new ApiResponse(true, 200, "FF order fulfilled successfully", ffOrder));
+
+  } else if (status === "rejected") {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { balance: { increment: Number(ffOrder.diamondPrice) } },
+    });
+    await sendNotification(
+      userData?.token,
+      "Your top-up order was rejected",
+      "The amount has been refunded to your balance."
+    );
+    return res.status(200).json(new ApiResponse(true, 200, "FF order rejected", ffOrder));
   }
 
-  if (status === 'delivered') {
-    const userData = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    const messagenew = {
-      notification: {
-        title: "Your diamond topup is delivered.",
-        body: `Thank u for topup`,
-      },
-      token: userData?.token,
-    };
-    // @ts-ignore
-    await admin.messaging().send(messagenew);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(true, 200, 'Ff order fullfill successfully', findFfOrder));
-  } else if (status === 'rejected') {
-    const addBalance = await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        balance: {
-          increment: Number(findFfOrder.diamondPrice),
-        },
-      },
-    });
-    if (!addBalance) {
-      throw new ApiError(false, 500, 'unabale to add user balance');
-    }
-    return res.status(200).json(new ApiResponse(true, 200, 'Ff order rejected', findFfOrder));
-  } else {
-    return res
-      .status(200)
-      .json(new ApiResponse(true, 200, 'Status updated successfully', findFfOrder));
-  }
+  return res.status(200).json(new ApiResponse(true, 200, "Status updated successfully", ffOrder));
 });
 
 // delete user
