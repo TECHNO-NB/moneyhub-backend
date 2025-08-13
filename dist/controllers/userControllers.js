@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
+exports.saveNotificationTokenControllers = exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const db_1 = __importDefault(require("../DB/db"));
@@ -137,3 +137,28 @@ const getAllFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => 
         .json(new apiResponse_1.default(true, 200, 'Get all ff tournament', getAllFfTournament));
 }));
 exports.getAllFfTournamentControllers = getAllFfTournamentControllers;
+// saved notification token in db
+const saveNotificationTokenControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("server is hit badly");
+    const { token } = req.body;
+    // @ts-ignore
+    const { id } = req.user;
+    if (!id || !token) {
+        throw new apiError_1.default(false, 400, 'Invalid request');
+    }
+    const user = yield db_1.default.user.update({
+        where: {
+            id: id,
+        },
+        data: {
+            token: token,
+        },
+    });
+    if (!user) {
+        throw new apiError_1.default(false, 404, 'User not found');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Save notification token', user));
+}));
+exports.saveNotificationTokenControllers = saveNotificationTokenControllers;

@@ -140,10 +140,42 @@ const getAllFfTournamentControllers = asyncHandler(
   }
 );
 
+// saved notification token in db
+const saveNotificationTokenControllers = asyncHandler(
+  async (req: Request, res: Response): Promise<any> => {
+    console.log("server is hit badly")
+    const { token } = req.body;
+    // @ts-ignore
+    const { id } = req.user;
+
+    if (!id || !token) {
+      throw new ApiError(false, 400, 'Invalid request');
+    }
+
+    const user = await prisma.user.update({
+      where: {
+        id: id,
+      },
+      data: {
+        token: token,
+      },
+    });
+    if(!user){
+      throw new ApiError(false, 404, 'User not found')
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'Save notification token', user));
+
+    
+  }
+);
+
 export {
   signInControllers,
   verifyUserControllers,
   logoutUserControllers,
   getAllFfTopUpListControllers,
   getAllFfTournamentControllers,
+  saveNotificationTokenControllers
 };

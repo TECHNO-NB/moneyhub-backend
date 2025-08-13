@@ -55,7 +55,7 @@ app.post('/send-notification', async (req, res) => {
       title: title,
       body: body,
     },
-    token: token
+    token: token,
   };
 
   try {
@@ -63,7 +63,7 @@ app.post('/send-notification', async (req, res) => {
     const response = await admin.messaging().send(message);
     console.log('Successfully sent message:', response);
     res.status(200).send({ success: true, messageId: response });
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error sending message:', error);
     res.status(500).send({ success: false, error: error.message });
   }
@@ -80,4 +80,4 @@ app.use('/api/v1/tournament', ffTournamentRoute);
 app.get('/', async (req, res) => {
   res.send('MoneyHub Server is running');
 });
-export default app;
+export { app, admin };

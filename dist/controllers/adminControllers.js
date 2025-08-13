@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
@@ -152,6 +153,20 @@ const completeFfOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void
         throw new apiError_1.default(false, 500, 'invalid order id');
     }
     if (status === 'delivered') {
+        const userData = yield db_1.default.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+        const messagenew = {
+            notification: {
+                title: "Your diamond topup is delivered.",
+                body: `Thank u for topup`,
+            },
+            token: userData === null || userData === void 0 ? void 0 : userData.token,
+        };
+        // @ts-ignore
+        yield app_1.admin.messaging().send(messagenew);
         return res
             .status(200)
             .json(new apiResponse_1.default(true, 200, 'Ff order fullfill successfully', findFfOrder));

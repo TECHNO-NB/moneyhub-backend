@@ -3,6 +3,7 @@ import {
   getAllFfTopUpListControllers,
   getAllFfTournamentControllers,
   logoutUserControllers,
+  saveNotificationTokenControllers,
   signInControllers,
   verifyUserControllers,
 } from '../controllers/userControllers';
@@ -15,4 +16,5 @@ router.route('/verify-user').post(jwtVerify, verifyUserControllers);
 router.route('/log-out').get(jwtVerify, logoutUserControllers);
 router.route('/get-topup-list').get( getAllFfTopUpListControllers);
 router.route('/get-ff-tournament').get(getAllFfTournamentControllers);
+router.route('/token').post(jwtVerify,saveNotificationTokenControllers);
 export default router;

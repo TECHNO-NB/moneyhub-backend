@@ -1,3 +1,4 @@
+import { admin } from '../app';
 import prisma from '../DB/db';
 import ApiError from '../utils/apiError';
 import ApiResponse from '../utils/apiResponse';
@@ -150,6 +151,21 @@ const completeFfOrder = asyncHandler(async (req, res): Promise<any> => {
   }
 
   if (status === 'delivered') {
+    const userData = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    const messagenew = {
+      notification: {
+        title: "Your diamond topup is delivered.",
+        body: `Thank u for topup`,
+      },
+      token: userData?.token,
+    };
+    // @ts-ignore
+    await admin.messaging().send(messagenew);
+
     return res
       .status(200)
       .json(new ApiResponse(true, 200, 'Ff order fullfill successfully', findFfOrder));
@@ -335,7 +351,7 @@ const getAllTournament = asyncHandler(async (req, res): Promise<any> => {
     include: {
       enteredFfTournament: true,
     },
-     orderBy: {
+    orderBy: {
       updatedAt: 'desc',
     },
   });
@@ -353,7 +369,6 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
   const { tournamentId } = req.params;
 
   const { roomId, password } = req.body;
-
 
   if (!tournamentId) {
     throw new ApiError(false, 404, 'tournament id not found');

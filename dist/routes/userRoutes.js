@@ -12,4 +12,5 @@ router.route('/verify-user').post(authMiddleware_1.jwtVerify, userControllers_1.
 router.route('/log-out').get(authMiddleware_1.jwtVerify, userControllers_1.logoutUserControllers);
 router.route('/get-topup-list').get(userControllers_1.getAllFfTopUpListControllers);
 router.route('/get-ff-tournament').get(userControllers_1.getAllFfTournamentControllers);
+router.route('/token').post(authMiddleware_1.jwtVerify, userControllers_1.saveNotificationTokenControllers);
 exports.default = router;

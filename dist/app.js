@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.admin = exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
@@ -22,7 +23,9 @@ const adminRoutes_1 = __importDefault(require("./routes/admin/adminRoutes"));
 const ffOrderRoutes_1 = __importDefault(require("./routes/ffOrderRoutes"));
 const ffTournamentRoutes_1 = __importDefault(require("./routes/ffTournamentRoutes"));
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
+exports.admin = firebase_admin_1.default;
 const app = (0, express_1.default)();
+exports.app = app;
 // default middleware
 app.use((0, cors_1.default)({
     origin: [process.env.FRONTEND_URL, process.env.FRONTEND_URL_ADMIN],
@@ -56,7 +59,7 @@ app.post('/send-notification', (req, res) => __awaiter(void 0, void 0, void 0, f
             title: title,
             body: body,
         },
-        token: token
+        token: token,
     };
     try {
         // Send the message using the Firebase Admin SDK.
@@ -79,4 +82,3 @@ app.use('/api/v1/tournament', ffTournamentRoutes_1.default);
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.send('MoneyHub Server is running');
 }));
-exports.default = app;
