@@ -6,7 +6,6 @@ import ApiResponse from '../utils/apiResponse';
 import asyncHandler from '../utils/asyncHandler';
 import { deleteCloudinaryImage } from '../utils/cloudinary';
 
-
 const sendNotification = async (
   token: string | null | undefined,
   title: string,
@@ -20,7 +19,7 @@ const sendNotification = async (
     token,
     webpush: {
       fcmOptions: {
-        link: link || "https://moneyhub.store", // default link
+        link: link || 'https://moneyhub.store', // default link
       },
     },
   };
@@ -29,12 +28,9 @@ const sendNotification = async (
     // @ts-ignore
     await admin.messaging().send(message);
   } catch (error) {
-    console.error("Notification send failed:", error);
+    console.error('Notification send failed:', error);
   }
 };
-
-
-
 
 // check  All load balance screenshot
 const checkAllLoadBalanceScreenshot = asyncHandler(async (req, res): Promise<any> => {
@@ -106,7 +102,7 @@ const loadCoinToUserWallet = asyncHandler(async (req, res): Promise<any> => {
     if (!updateUserAmount) {
       throw new ApiError(false, 500, 'invalid user id');
     }
-    await sendNotification(updateUserAmount.token,message,"Thank you for load coin.");
+    await sendNotification(updateUserAmount.token, message, 'Thank you for load coin.');
     const deleteScreeshot = await deleteCloudinaryImage(paymentScreenshot);
 
     if (!deleteScreeshot) {
@@ -115,6 +111,14 @@ const loadCoinToUserWallet = asyncHandler(async (req, res): Promise<any> => {
 
     return res.status(200).json(new ApiResponse(true, 200, 'Amount load successfully', status));
   } else {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    await sendNotification(user?.token, message, 'Please upload valid screenshot.');
+    const deleteScreeshot = await deleteCloudinaryImage(paymentScreenshot);
+
     return res.status(200).json(new ApiResponse(true, 200, 'Status updated successfully', status));
   }
 });
@@ -141,6 +145,7 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
     include: {
       user: {
         select: {
+          id: true,
           fullName: true,
           balance: true,
         },
@@ -157,44 +162,45 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
 });
 
 // ff order fullfill
-const completeFfOrder = asyncHandler(async (req: Request, res: Response):Promise<any> => {
+const completeFfOrder = asyncHandler(async (req: Request, res: Response): Promise<any> => {
   const { message, status, userId } = req.body;
   const { orderId } = req.params;
 
-  if (!orderId) throw new ApiError(false, 400, "orderId is required");
-  if (!message || !status || !userId) throw new ApiError(false, 400, "Invalid request body");
+  if (!orderId) throw new ApiError(false, 400, 'orderId is required');
+  if (!message || !status || !userId) throw new ApiError(false, 400, 'Invalid request body');
 
   const ffOrder = await prisma.ffOrder.update({
     where: { id: orderId },
     data: { status, message },
   });
 
-  if (!ffOrder) throw new ApiError(false, 404, "Invalid order ID");
+  if (!ffOrder) throw new ApiError(false, 404, 'Invalid order ID');
 
   const userData = await prisma.user.findUnique({ where: { id: userId } });
 
-  if (status === "delivered") {
+  if (status === 'delivered') {
     await sendNotification(
       userData?.token,
-      "Your diamond top-up is delivered.",
-      "Thank you for your top-up!"
+      'Your diamond top-up is delivered.',
+      'Thank you for your top-up!'
     );
-    return res.status(200).json(new ApiResponse(true, 200, "FF order fulfilled successfully", ffOrder));
-
-  } else if (status === "rejected") {
+    return res
+      .status(200)
+      .json(new ApiResponse(true, 200, 'FF order fulfilled successfully', ffOrder));
+  } else if (status === 'rejected') {
     await prisma.user.update({
       where: { id: userId },
       data: { balance: { increment: Number(ffOrder.diamondPrice) } },
     });
     await sendNotification(
       userData?.token,
-      "Your top-up order was rejected",
-      "The amount has been refunded to your balance."
+      'Your top-up order was rejected',
+      'The amount has been refunded to your balance.'
     );
-    return res.status(200).json(new ApiResponse(true, 200, "FF order rejected", ffOrder));
+    return res.status(200).json(new ApiResponse(true, 200, 'FF order rejected', ffOrder));
   }
 
-  return res.status(200).json(new ApiResponse(true, 200, "Status updated successfully", ffOrder));
+  return res.status(200).json(new ApiResponse(true, 200, 'Status updated successfully', ffOrder));
 });
 
 // delete user
@@ -286,6 +292,11 @@ const addCoinToUser = asyncHandler(async (req, res): Promise<any> => {
   if (!addCoin) {
     throw new ApiError(false, 404, 'User not found');
   }
+  await sendNotification(
+    addCoin?.token,
+    `You are Credited ${coin} Coin.`,
+    'Thank u for using moneyhub'
+  );
   return res.status(200).json(new ApiResponse(true, 200, 'Coin added successfully', addCoin));
 });
 
@@ -317,6 +328,11 @@ const removeCoinFromUser = asyncHandler(async (req, res): Promise<any> => {
   if (!removeCoin) {
     throw new ApiError(false, 404, 'User not found');
   }
+  await sendNotification(
+    removeCoin?.token,
+    `You Are Debited ${coin} Coin.`,
+    'Thank u for using moneyhub'
+  );
   return res.status(200).json(new ApiResponse(true, 200, 'Coin added successfully', removeCoin));
 });
 
@@ -327,7 +343,11 @@ const createFreeFireTournament = asyncHandler(async (req, res): Promise<any> => 
   if (!id) {
     throw new ApiError(false, 401, 'invalid user id should login with admin');
   }
+
   const { title, time, owner, ammo, skill, reward, cost } = req.body;
+
+  console.log(time)
+  console.log(title, time, owner, ammo, skill, reward, cost)
   const convertedReward = parseInt(reward);
   const convertedCost = parseInt(cost);
   if (!title || !time || !owner || !reward || !cost) {
@@ -382,7 +402,6 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
   if (!roomId || !password) {
     throw new ApiError(false, 400, 'invalid room id and password');
   }
-
   const updateRoomIdAndPassword = await prisma.ffTournament.update({
     where: {
       id: tournamentId,
@@ -391,10 +410,35 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
       roomId,
       password,
     },
+    include: {
+      enteredFfTournament: {
+        select: {
+          userId: true,
+          user: {
+            select: {
+              token: true,
+            },
+          },
+        },
+      },
+    },
   });
+
   if (!updateRoomIdAndPassword) {
     throw new ApiError(false, 404, 'Tournament not found');
   }
+  await Promise.all(
+    updateRoomIdAndPassword.enteredFfTournament.map(async (val) => {
+      if (val.user?.token) {
+        await sendNotification(
+          val.user.token,
+          'FF Tournament Is Started.',
+          `Room Id: ${roomId}  Password: ${password}`
+        );
+      }
+    })
+  );
+
   return res.status(200).json(new ApiResponse(true, 200, 'Room id and password'));
 });
 

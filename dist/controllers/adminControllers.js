@@ -27,7 +27,7 @@ const sendNotification = (token, title, body, link) => __awaiter(void 0, void 0,
         token,
         webpush: {
             fcmOptions: {
-                link: link || "https://moneyhub.store", // default link
+                link: link || 'https://moneyhub.store', // default link
             },
         },
     };
@@ -36,7 +36,7 @@ const sendNotification = (token, title, body, link) => __awaiter(void 0, void 0,
         yield app_1.admin.messaging().send(message);
     }
     catch (error) {
-        console.error("Notification send failed:", error);
+        console.error('Notification send failed:', error);
     }
 });
 // check  All load balance screenshot
@@ -103,7 +103,7 @@ const loadCoinToUserWallet = (0, asyncHandler_1.default)((req, res) => __awaiter
         if (!updateUserAmount) {
             throw new apiError_1.default(false, 500, 'invalid user id');
         }
-        yield sendNotification(updateUserAmount.token, message, "Thank you for load coin.");
+        yield sendNotification(updateUserAmount.token, message, 'Thank you for load coin.');
         const deleteScreeshot = yield (0, cloudinary_1.deleteCloudinaryImage)(paymentScreenshot);
         if (!deleteScreeshot) {
             throw new apiError_1.default(false, 500, 'Screenshot not delete');
@@ -111,6 +111,13 @@ const loadCoinToUserWallet = (0, asyncHandler_1.default)((req, res) => __awaiter
         return res.status(200).json(new apiResponse_1.default(true, 200, 'Amount load successfully', status));
     }
     else {
+        const user = yield db_1.default.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+        yield sendNotification(user === null || user === void 0 ? void 0 : user.token, message, 'Please upload valid screenshot.');
+        const deleteScreeshot = yield (0, cloudinary_1.deleteCloudinaryImage)(paymentScreenshot);
         return res.status(200).json(new apiResponse_1.default(true, 200, 'Status updated successfully', status));
     }
 }));
@@ -137,6 +144,7 @@ const allFfOrderControllers = (0, asyncHandler_1.default)((req, res) => __awaite
         include: {
             user: {
                 select: {
+                    id: true,
                     fullName: true,
                     balance: true,
                 },
@@ -156,29 +164,31 @@ const completeFfOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void
     const { message, status, userId } = req.body;
     const { orderId } = req.params;
     if (!orderId)
-        throw new apiError_1.default(false, 400, "orderId is required");
+        throw new apiError_1.default(false, 400, 'orderId is required');
     if (!message || !status || !userId)
-        throw new apiError_1.default(false, 400, "Invalid request body");
+        throw new apiError_1.default(false, 400, 'Invalid request body');
     const ffOrder = yield db_1.default.ffOrder.update({
         where: { id: orderId },
         data: { status, message },
     });
     if (!ffOrder)
-        throw new apiError_1.default(false, 404, "Invalid order ID");
+        throw new apiError_1.default(false, 404, 'Invalid order ID');
     const userData = yield db_1.default.user.findUnique({ where: { id: userId } });
-    if (status === "delivered") {
-        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, "Your diamond top-up is delivered.", "Thank you for your top-up!");
-        return res.status(200).json(new apiResponse_1.default(true, 200, "FF order fulfilled successfully", ffOrder));
+    if (status === 'delivered') {
+        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, 'Your diamond top-up is delivered.', 'Thank you for your top-up!');
+        return res
+            .status(200)
+            .json(new apiResponse_1.default(true, 200, 'FF order fulfilled successfully', ffOrder));
     }
-    else if (status === "rejected") {
+    else if (status === 'rejected') {
         yield db_1.default.user.update({
             where: { id: userId },
             data: { balance: { increment: Number(ffOrder.diamondPrice) } },
         });
-        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, "Your top-up order was rejected", "The amount has been refunded to your balance.");
-        return res.status(200).json(new apiResponse_1.default(true, 200, "FF order rejected", ffOrder));
+        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, 'Your top-up order was rejected', 'The amount has been refunded to your balance.');
+        return res.status(200).json(new apiResponse_1.default(true, 200, 'FF order rejected', ffOrder));
     }
-    return res.status(200).json(new apiResponse_1.default(true, 200, "Status updated successfully", ffOrder));
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Status updated successfully', ffOrder));
 }));
 exports.completeFfOrder = completeFfOrder;
 // delete user
@@ -265,6 +275,7 @@ const addCoinToUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
     if (!addCoin) {
         throw new apiError_1.default(false, 404, 'User not found');
     }
+    yield sendNotification(addCoin === null || addCoin === void 0 ? void 0 : addCoin.token, `You are Credited ${coin} Coin.`, 'Thank u for using moneyhub');
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin added successfully', addCoin));
 }));
 exports.addCoinToUser = addCoinToUser;
@@ -296,6 +307,7 @@ const removeCoinFromUser = (0, asyncHandler_1.default)((req, res) => __awaiter(v
     if (!removeCoin) {
         throw new apiError_1.default(false, 404, 'User not found');
     }
+    yield sendNotification(removeCoin === null || removeCoin === void 0 ? void 0 : removeCoin.token, `You Are Debited ${coin} Coin.`, 'Thank u for using moneyhub');
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin added successfully', removeCoin));
 }));
 exports.removeCoinFromUser = removeCoinFromUser;
@@ -307,6 +319,8 @@ const createFreeFireTournament = (0, asyncHandler_1.default)((req, res) => __awa
         throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
     }
     const { title, time, owner, ammo, skill, reward, cost } = req.body;
+    console.log(time);
+    console.log(title, time, owner, ammo, skill, reward, cost);
     const convertedReward = parseInt(reward);
     const convertedCost = parseInt(cost);
     if (!title || !time || !owner || !reward || !cost) {
@@ -367,10 +381,28 @@ const addRoomIdAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter
             roomId,
             password,
         },
+        include: {
+            enteredFfTournament: {
+                select: {
+                    userId: true,
+                    user: {
+                        select: {
+                            token: true,
+                        },
+                    },
+                },
+            },
+        },
     });
     if (!updateRoomIdAndPassword) {
         throw new apiError_1.default(false, 404, 'Tournament not found');
     }
+    yield Promise.all(updateRoomIdAndPassword.enteredFfTournament.map((val) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
+        if ((_a = val.user) === null || _a === void 0 ? void 0 : _a.token) {
+            yield sendNotification(val.user.token, 'FF Tournament Is Started.', `Room Id: ${roomId}  Password: ${password}`);
+        }
+    })));
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Room id and password'));
 }));
 exports.addRoomIdAndPassword = addRoomIdAndPassword;

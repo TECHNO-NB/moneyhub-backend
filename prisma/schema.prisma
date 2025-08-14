@@ -60,7 +60,7 @@ model ffTopUpRate {
 model ffTournament {
   id                  String                @id @default(cuid())
   title               String
-  time                DateTime
+  time                DateTime              @db.Timestamp(6)
   owner               String
   creator             User                  @relation(fields: [userId], references: [id])
   userId              String
