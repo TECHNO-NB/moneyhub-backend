@@ -19,6 +19,26 @@ const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const cloudinary_1 = require("../utils/cloudinary");
+const sendNotification = (token, title, body, link) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!token)
+        return; // No token, skip sending
+    const message = {
+        notification: { title, body },
+        token,
+        webpush: {
+            fcmOptions: {
+                link: link || "https://moneyhub.store", // default link
+            },
+        },
+    };
+    try {
+        // @ts-ignore
+        yield app_1.admin.messaging().send(message);
+    }
+    catch (error) {
+        console.error("Notification send failed:", error);
+    }
+});
 // check  All load balance screenshot
 const checkAllLoadBalanceScreenshot = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const screenshotALLData = yield db_1.default.user.findMany({
@@ -83,6 +103,7 @@ const loadCoinToUserWallet = (0, asyncHandler_1.default)((req, res) => __awaiter
         if (!updateUserAmount) {
             throw new apiError_1.default(false, 500, 'invalid user id');
         }
+        yield sendNotification(updateUserAmount.token, message, "Thank you for load coin.");
         const deleteScreeshot = yield (0, cloudinary_1.deleteCloudinaryImage)(paymentScreenshot);
         if (!deleteScreeshot) {
             throw new apiError_1.default(false, 500, 'Screenshot not delete');
@@ -134,64 +155,30 @@ exports.allFfOrderControllers = allFfOrderControllers;
 const completeFfOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { message, status, userId } = req.body;
     const { orderId } = req.params;
-    if (!orderId) {
-        throw new apiError_1.default(false, 500, 'orderId is required');
-    }
-    if (!message || !status || !userId) {
-        throw new apiError_1.default(false, 500, 'invalid request body');
-    }
-    const findFfOrder = yield db_1.default.ffOrder.update({
-        where: {
-            id: orderId,
-        },
-        data: {
-            status,
-            message,
-        },
+    if (!orderId)
+        throw new apiError_1.default(false, 400, "orderId is required");
+    if (!message || !status || !userId)
+        throw new apiError_1.default(false, 400, "Invalid request body");
+    const ffOrder = yield db_1.default.ffOrder.update({
+        where: { id: orderId },
+        data: { status, message },
     });
-    if (!findFfOrder) {
-        throw new apiError_1.default(false, 500, 'invalid order id');
+    if (!ffOrder)
+        throw new apiError_1.default(false, 404, "Invalid order ID");
+    const userData = yield db_1.default.user.findUnique({ where: { id: userId } });
+    if (status === "delivered") {
+        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, "Your diamond top-up is delivered.", "Thank you for your top-up!");
+        return res.status(200).json(new apiResponse_1.default(true, 200, "FF order fulfilled successfully", ffOrder));
     }
-    if (status === 'delivered') {
-        const userData = yield db_1.default.user.findUnique({
-            where: {
-                id: userId,
-            },
+    else if (status === "rejected") {
+        yield db_1.default.user.update({
+            where: { id: userId },
+            data: { balance: { increment: Number(ffOrder.diamondPrice) } },
         });
-        const messagenew = {
-            notification: {
-                title: "Your diamond topup is delivered.",
-                body: `Thank u for topup`,
-            },
-            token: userData === null || userData === void 0 ? void 0 : userData.token,
-        };
-        // @ts-ignore
-        yield app_1.admin.messaging().send(messagenew);
-        return res
-            .status(200)
-            .json(new apiResponse_1.default(true, 200, 'Ff order fullfill successfully', findFfOrder));
+        yield sendNotification(userData === null || userData === void 0 ? void 0 : userData.token, "Your top-up order was rejected", "The amount has been refunded to your balance.");
+        return res.status(200).json(new apiResponse_1.default(true, 200, "FF order rejected", ffOrder));
     }
-    else if (status === 'rejected') {
-        const addBalance = yield db_1.default.user.update({
-            where: {
-                id: userId,
-            },
-            data: {
-                balance: {
-                    increment: Number(findFfOrder.diamondPrice),
-                },
-            },
-        });
-        if (!addBalance) {
-            throw new apiError_1.default(false, 500, 'unabale to add user balance');
-        }
-        return res.status(200).json(new apiResponse_1.default(true, 200, 'Ff order rejected', findFfOrder));
-    }
-    else {
-        return res
-            .status(200)
-            .json(new apiResponse_1.default(true, 200, 'Status updated successfully', findFfOrder));
-    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, "Status updated successfully", ffOrder));
 }));
 exports.completeFfOrder = completeFfOrder;
 // delete user
