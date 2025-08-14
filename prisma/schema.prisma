@@ -22,6 +22,7 @@ model User {
   order               ffOrder[]
   ffTournament        ffTournament[]
   enteredFfTournament enteredFfTournament[]
+  notification        notification[]
 }
 
 model LoadBalance {
@@ -89,6 +90,16 @@ model enteredFfTournament {
   updatedAt    DateTime     @default(now()) @updatedAt
 }
 
+model notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  message   String
+  status    Status   @default(started)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
 enum Role {
   user
   admin
@@ -100,6 +111,7 @@ enum Status {
   approved
   delivered
   rejected
+  started
   cancel
   completed
 }

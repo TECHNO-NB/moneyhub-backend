@@ -20,5 +20,5 @@ router.route('/create-ff-tournament').post(authMiddleware_1.isAdminSubAdmin, adm
 router.route('/update-roomid-password/:tournamentId').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.addRoomIdAndPassword);
 router.route('/get-all-tournament').get(authMiddleware_1.isAdminSubAdmin, adminControllers_1.getAllTournament);
 router.route('/delete-tournament/:tournamentId').delete(authMiddleware_1.isAdminSubAdmin, adminControllers_1.deleteTournament);
-router.route('/make-winner').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.deleteTournament);
+router.route('/make-winner/:winnerId').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.makeWinner);
 exports.default = router;

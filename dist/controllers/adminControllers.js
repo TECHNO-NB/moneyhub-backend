@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
@@ -319,8 +319,6 @@ const createFreeFireTournament = (0, asyncHandler_1.default)((req, res) => __awa
         throw new apiError_1.default(false, 401, 'invalid user id should login with admin');
     }
     const { title, time, owner, ammo, skill, reward, cost } = req.body;
-    console.log(time);
-    console.log(title, time, owner, ammo, skill, reward, cost);
     const convertedReward = parseInt(reward);
     const convertedCost = parseInt(cost);
     if (!title || !time || !owner || !reward || !cost) {
@@ -403,6 +401,13 @@ const addRoomIdAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter
             yield sendNotification(val.user.token, 'FF Tournament Is Started.', `Room Id: ${roomId}  Password: ${password}`);
         }
     })));
+    const message = `Tournament started.Room Id: ${roomId} Password: ${password}`;
+    const updateTournament = yield db_1.default.enteredFfTournament.updateMany({
+        data: {
+            message,
+            status: 'started',
+        },
+    });
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Room id and password'));
 }));
 exports.addRoomIdAndPassword = addRoomIdAndPassword;
@@ -421,3 +426,70 @@ const deleteTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully delete tournament'));
 }));
 exports.deleteTournament = deleteTournament;
+// make winner and send notifications
+const makeWinner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { winnerId } = req.params;
+    console.log('winner id', winnerId);
+    if (!winnerId) {
+        throw new apiError_1.default(false, 404, 'Winner id is required');
+    }
+    // 1️⃣ Find the winner's tournament entry
+    const winnerEntry = yield db_1.default.enteredFfTournament.findFirst({
+        where: { userId: winnerId },
+        include: {
+            fftournament: { select: { reward: true } },
+            user: { select: { token: true } },
+        },
+    });
+    if (!winnerEntry) {
+        throw new apiError_1.default(false, 404, 'Winner not found');
+    }
+    // 2️⃣ Update winner entry
+    yield db_1.default.enteredFfTournament.update({
+        where: { id: winnerEntry.id },
+        data: {
+            message: 'You won the recent tournament.',
+            status: 'completed',
+            isWinner: true,
+        },
+    });
+    // 3️⃣ Update winner's balance
+    yield db_1.default.user.update({
+        where: { id: winnerId },
+        data: {
+            balance: { increment: winnerEntry.fftournament.reward },
+        },
+    });
+    // 4️⃣ Send notification to winner
+    if (winnerEntry.user.token) {
+        yield sendNotification(winnerEntry.user.token, 'You won the recent tournament', 'Prize coin is successfully added');
+    }
+    // 5️⃣ Fetch all losing users for the same tournament
+    const losingUsers = yield db_1.default.enteredFfTournament.findMany({
+        where: {
+            id: { not: winnerEntry.id },
+            tournamentId: winnerEntry.tournamentId,
+        },
+        include: { user: { select: { token: true } } },
+    });
+    // 6️⃣ Update losing users
+    yield db_1.default.enteredFfTournament.updateMany({
+        where: {
+            id: { not: winnerEntry.id },
+            tournamentId: winnerEntry.tournamentId,
+        },
+        data: {
+            status: 'completed',
+            isWinner: false,
+            message: 'You lose the recent tournament.',
+        },
+    });
+    // 7️⃣ Send notifications to losing users
+    yield Promise.all(losingUsers.map((u) => u.user.token
+        ? sendNotification(u.user.token, 'You lose the recent tournament.', 'Try again in another tournament.')
+        : Promise.resolve()));
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Successfully made a winner'));
+}));
+exports.makeWinner = makeWinner;

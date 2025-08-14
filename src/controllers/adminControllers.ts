@@ -346,8 +346,6 @@ const createFreeFireTournament = asyncHandler(async (req, res): Promise<any> => 
 
   const { title, time, owner, ammo, skill, reward, cost } = req.body;
 
-  console.log(time)
-  console.log(title, time, owner, ammo, skill, reward, cost)
   const convertedReward = parseInt(reward);
   const convertedCost = parseInt(cost);
   if (!title || !time || !owner || !reward || !cost) {
@@ -439,6 +437,15 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
     })
   );
 
+  const message = `Tournament started.Room Id: ${roomId} Password: ${password}`;
+
+  const updateTournament = await prisma.enteredFfTournament.updateMany({
+    data: {
+      message,
+      status: 'started',
+    },
+  });
+
   return res.status(200).json(new ApiResponse(true, 200, 'Room id and password'));
 });
 
@@ -457,20 +464,95 @@ const deleteTournament = asyncHandler(async (req, res): Promise<any> => {
   return res.status(200).json(new ApiResponse(true, 200, 'Successfully delete tournament'));
 });
 
-// make the tournament winner
-// const makeWinnerInTournament = asyncHandler(async (req, res): Promise<any> => {
-//   // @ts-ignore
-//   const { userId } = req.params;
-//   const deleteTournament = await prisma.ffTournament.delete({
-//     where: {
-//       id: tournamentId,
-//     },
-//   });
-//   if (!deleteTournament) {
-//     throw new ApiError(false, 404, 'Tournament not found');
-//   }
-//   return res.status(200).json(new ApiResponse(true, 200, 'Successfully delete tournament'));
-// });
+// make winner and send notifications
+const makeWinner = asyncHandler(async (req, res): Promise<any> => {
+  const { winnerId } = req.params;
+  console.log('winner id', winnerId);
+
+  if (!winnerId) {
+    throw new ApiError(false, 404, 'Winner id is required');
+  }
+
+  // 1️⃣ Find the winner's tournament entry
+  const winnerEntry = await prisma.enteredFfTournament.findFirst({
+    where: { userId: winnerId },
+    include: {
+      fftournament: { select: { reward: true } },
+      user: { select: { token: true } },
+    },
+  });
+
+  if (!winnerEntry) {
+    throw new ApiError(false, 404, 'Winner not found');
+  }
+
+  // 2️⃣ Update winner entry
+  await prisma.enteredFfTournament.update({
+    where: { id: winnerEntry.id },
+    data: {
+      message: 'You won the recent tournament.',
+      status: 'completed',
+      isWinner: true,
+    },
+  });
+
+  // 3️⃣ Update winner's balance
+  await prisma.user.update({
+    where: { id: winnerId },
+    data: {
+      balance: { increment: winnerEntry.fftournament.reward },
+    },
+  });
+
+  // 4️⃣ Send notification to winner
+  if (winnerEntry.user.token) {
+    await sendNotification(
+      winnerEntry.user.token,
+      'You won the recent tournament',
+      'Prize coin is successfully added'
+    );
+  }
+
+  // 5️⃣ Fetch all losing users for the same tournament
+  const losingUsers = await prisma.enteredFfTournament.findMany({
+    where: {
+      id: { not: winnerEntry.id },
+      tournamentId: winnerEntry.tournamentId,
+    },
+    include: { user: { select: { token: true } } },
+  });
+
+  // 6️⃣ Update losing users
+  await prisma.enteredFfTournament.updateMany({
+    where: {
+      id: { not: winnerEntry.id },
+      tournamentId: winnerEntry.tournamentId,
+    },
+    data: {
+      status: 'completed',
+      isWinner: false,
+      message: 'You lose the recent tournament.',
+    },
+  });
+
+  // 7️⃣ Send notifications to losing users
+  await Promise.all(
+    losingUsers.map((u) =>
+      u.user.token
+        ? sendNotification(
+            u.user.token,
+            'You lose the recent tournament.',
+            'Try again in another tournament.'
+          )
+        : Promise.resolve()
+    )
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'Successfully made a winner'));
+});
+
 export {
   checkAllLoadBalanceScreenshot,
   loadCoinToUserWallet,
@@ -485,4 +567,5 @@ export {
   addRoomIdAndPassword,
   getAllTournament,
   deleteTournament,
+  makeWinner,
 };

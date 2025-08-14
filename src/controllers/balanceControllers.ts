@@ -42,7 +42,6 @@ const loadBalanceControllers = asyncHandler(async (req: Request, res: Response):
 // get user balace update cancel or status
 const checkStatusNotificationOfBalance = asyncHandler(
   async (req: Request, res: Response): Promise<any> => {
-  
     // @ts-ignore
     const user = req.user;
     if (!user) {
@@ -53,17 +52,21 @@ const checkStatusNotificationOfBalance = asyncHandler(
     const loadBalance = await prisma.loadBalance.findMany({
       where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
+      take: 3,
     });
 
     // FF Orders
     const ffOrders = await prisma.ffOrder.findMany({
       where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
+      take: 3,
     });
 
-     const tournament = await prisma.enteredFfTournament.findMany({
+    // tournament notification
+    const tournament = await prisma.enteredFfTournament.findMany({
       where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
+      take: 3,
     });
 
     // If both empty
@@ -75,10 +78,10 @@ const checkStatusNotificationOfBalance = asyncHandler(
       new ApiResponse(true, 200, 'Notifications found', {
         loadBalance,
         ffOrders,
-        tournament
+        tournament,
       })
     );
   }
 );
 
-export {loadBalanceControllers,checkStatusNotificationOfBalance}
+export { loadBalanceControllers, checkStatusNotificationOfBalance };

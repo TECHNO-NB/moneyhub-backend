@@ -11,4 +11,5 @@ router.route("/join-ff-tournament/:tournamentId").post(jwtVerify,joinFfTournamen
 router.route("/get-entered-tournament").get(jwtVerify,showAllreadyEnteredTournament);
 
 
+
 export default router;

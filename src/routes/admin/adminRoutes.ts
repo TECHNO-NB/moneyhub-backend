@@ -13,6 +13,7 @@ import {
   getAllTournament,
   getAllUserDetails,
   loadCoinToUserWallet,
+  makeWinner,
   removeCoinFromUser,
 } from '../../controllers/adminControllers';
 
@@ -31,6 +32,6 @@ router.route('/create-ff-tournament').post(isAdminSubAdmin, createFreeFireTourna
 router.route('/update-roomid-password/:tournamentId').patch(isAdminSubAdmin, addRoomIdAndPassword);
 router.route('/get-all-tournament').get(isAdminSubAdmin, getAllTournament);
 router.route('/delete-tournament/:tournamentId').delete(isAdminSubAdmin, deleteTournament);
-router.route('/make-winner').patch(isAdminSubAdmin, deleteTournament);
+router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
 
 export default router;

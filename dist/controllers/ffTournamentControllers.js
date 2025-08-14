@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showAllreadyEnteredTournament = exports.joinFfTournamentControllers = void 0;
+exports.updateEnterTournamentNotifications = exports.showAllreadyEnteredTournament = exports.joinFfTournamentControllers = void 0;
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
@@ -123,3 +123,21 @@ const showAllreadyEnteredTournament = (0, asyncHandler_1.default)((req, res) => 
         .json(new apiResponse_1.default(true, 201, 'Successfully join to tournament', findUserEnteredTournament));
 }));
 exports.showAllreadyEnteredTournament = showAllreadyEnteredTournament;
+// update enterTournament notifications
+const updateEnterTournamentNotifications = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { message, status } = req.body;
+    if (!message || !status) {
+        throw new apiError_1.default(false, 400, 'Failed to update enterTournament notifications');
+    }
+    const update = yield db_1.default.enteredFfTournament.updateMany({
+        data: {
+            message,
+            status,
+        },
+    });
+    if (!update) {
+        throw new apiError_1.default(false, 400, 'Failed to update enterTournament notifications');
+    }
+    res.status(200).json(new apiResponse_1.default(true, 200, 'successfully updated tourna notifications'));
+}));
+exports.updateEnterTournamentNotifications = updateEnterTournamentNotifications;

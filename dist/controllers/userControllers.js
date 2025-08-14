@@ -139,7 +139,6 @@ const getAllFfTournamentControllers = (0, asyncHandler_1.default)((req, res) => 
 exports.getAllFfTournamentControllers = getAllFfTournamentControllers;
 // saved notification token in db
 const saveNotificationTokenControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("server is hit badly");
     const { token } = req.body;
     // @ts-ignore
     const { id } = req.user;

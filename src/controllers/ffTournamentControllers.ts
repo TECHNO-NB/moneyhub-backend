@@ -120,4 +120,25 @@ const showAllreadyEnteredTournament = asyncHandler(async (req, res): Promise<any
     .status(201)
     .json(new ApiResponse(true, 201, 'Successfully join to tournament', findUserEnteredTournament));
 });
-export { joinFfTournamentControllers, showAllreadyEnteredTournament };
+
+// update enterTournament notifications
+const updateEnterTournamentNotifications = asyncHandler(async (req, res): Promise<any> => {
+  const { message, status } = req.body;
+
+  if (!message || !status) {
+    throw new ApiError(false, 400, 'Failed to update enterTournament notifications');
+  }
+
+  const update = await prisma.enteredFfTournament.updateMany({
+    data: {
+      message,
+      status,
+    },
+  });
+  if (!update) {
+    throw new ApiError(false, 400, 'Failed to update enterTournament notifications');
+  }
+
+  res.status(200).json(new ApiResponse(true, 200, 'successfully updated tourna notifications'));
+});
+export { joinFfTournamentControllers, showAllreadyEnteredTournament,updateEnterTournamentNotifications };

@@ -59,15 +59,19 @@ const checkStatusNotificationOfBalance = (0, asyncHandler_1.default)((req, res) 
     const loadBalance = yield db_1.default.loadBalance.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
+        take: 3,
     });
     // FF Orders
     const ffOrders = yield db_1.default.ffOrder.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
+        take: 3,
     });
+    // tournament notification
     const tournament = yield db_1.default.enteredFfTournament.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
+        take: 3,
     });
     // If both empty
     if (!loadBalance.length && !ffOrders.length) {
@@ -76,7 +80,7 @@ const checkStatusNotificationOfBalance = (0, asyncHandler_1.default)((req, res) 
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Notifications found', {
         loadBalance,
         ffOrders,
-        tournament
+        tournament,
     }));
 }));
 exports.checkStatusNotificationOfBalance = checkStatusNotificationOfBalance;
