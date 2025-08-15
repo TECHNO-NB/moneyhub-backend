@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
@@ -429,7 +429,6 @@ exports.deleteTournament = deleteTournament;
 // make winner and send notifications
 const makeWinner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { winnerId } = req.params;
-    console.log('winner id', winnerId);
     if (!winnerId) {
         throw new apiError_1.default(false, 404, 'Winner id is required');
     }
@@ -488,8 +487,60 @@ const makeWinner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
     yield Promise.all(losingUsers.map((u) => u.user.token
         ? sendNotification(u.user.token, 'You lose the recent tournament.', 'Try again in another tournament.')
         : Promise.resolve()));
-    return res
-        .status(200)
-        .json(new apiResponse_1.default(true, 200, 'Successfully made a winner'));
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully made a winner'));
 }));
 exports.makeWinner = makeWinner;
+// cancel tournament
+const cancelTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { tournamentId } = req.params;
+    const { cost } = req.body;
+    console.log(tournamentId, cost);
+    if (!tournamentId) {
+        throw new apiError_1.default(false, 400, 'Tournament ID and cost is required.');
+    }
+    const findTournament = yield db_1.default.ffTournament.findUnique({
+        where: {
+            id: tournamentId,
+        },
+        include: {
+            enteredFfTournament: {
+                select: {
+                    user: {
+                        select: {
+                            id: true,
+                            balance: true,
+                            token: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+    if (!findTournament) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    findTournament.enteredFfTournament.map((val) => __awaiter(void 0, void 0, void 0, function* () {
+        const balanceUpdate = yield db_1.default.user.update({
+            where: {
+                id: val.user.id,
+            },
+            data: {
+                balance: {
+                    increment: cost,
+                },
+            },
+        });
+        yield sendNotification(val.user.token, 'FF Tournament is canceled.', 'Your coin is refunded.');
+    }));
+    const deleteTournment = yield db_1.default.ffTournament.delete({
+        where: {
+            id: tournamentId,
+        },
+    });
+    if (!deleteTournment) {
+        throw new apiError_1.default(false, 404, 'Tournament not found');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully cancel tournament'));
+}));
+exports.cancelTournament = cancelTournament;

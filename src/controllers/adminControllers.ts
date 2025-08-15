@@ -467,7 +467,6 @@ const deleteTournament = asyncHandler(async (req, res): Promise<any> => {
 // make winner and send notifications
 const makeWinner = asyncHandler(async (req, res): Promise<any> => {
   const { winnerId } = req.params;
-  console.log('winner id', winnerId);
 
   if (!winnerId) {
     throw new ApiError(false, 404, 'Winner id is required');
@@ -548,9 +547,64 @@ const makeWinner = asyncHandler(async (req, res): Promise<any> => {
     )
   );
 
-  return res
-    .status(200)
-    .json(new ApiResponse(true, 200, 'Successfully made a winner'));
+  return res.status(200).json(new ApiResponse(true, 200, 'Successfully made a winner'));
+});
+
+// cancel tournament
+const cancelTournament = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { tournamentId } = req.params;
+  const { cost } = req.body;
+console.log(tournamentId,cost)
+  if (!tournamentId ) {
+    throw new ApiError(false, 400, 'Tournament ID and cost is required.');
+  }
+  const findTournament = await prisma.ffTournament.findUnique({
+    where: {
+      id: tournamentId,
+    },
+    include: {
+      enteredFfTournament: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              balance: true,
+              token: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!findTournament) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+
+  findTournament.enteredFfTournament.map(async (val) => {
+    const balanceUpdate = await prisma.user.update({
+      where: {
+        id: val.user.id,
+      },
+      data: {
+        balance: {
+          increment: cost,
+        },
+      },
+    });
+    await sendNotification(val.user.token, 'FF Tournament is canceled.', 'Your coin is refunded.');
+  });
+
+  const deleteTournment = await prisma.ffTournament.delete({
+    where: {
+      id: tournamentId,
+    },
+  });
+
+  if (!deleteTournment) {
+    throw new ApiError(false, 404, 'Tournament not found');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Successfully cancel tournament'));
 });
 
 export {
@@ -568,4 +622,5 @@ export {
   getAllTournament,
   deleteTournament,
   makeWinner,
+  cancelTournament,
 };

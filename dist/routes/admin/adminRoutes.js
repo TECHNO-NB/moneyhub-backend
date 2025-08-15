@@ -21,4 +21,5 @@ router.route('/update-roomid-password/:tournamentId').patch(authMiddleware_1.isA
 router.route('/get-all-tournament').get(authMiddleware_1.isAdminSubAdmin, adminControllers_1.getAllTournament);
 router.route('/delete-tournament/:tournamentId').delete(authMiddleware_1.isAdminSubAdmin, adminControllers_1.deleteTournament);
 router.route('/make-winner/:winnerId').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.makeWinner);
+router.route("/cancel-tournament/:tournamentId").post(authMiddleware_1.isAdminSubAdmin, adminControllers_1.cancelTournament);
 exports.default = router;

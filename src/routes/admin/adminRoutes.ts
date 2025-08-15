@@ -4,6 +4,7 @@ import {
   addCoinToUser,
   addRoomIdAndPassword,
   allFfOrderControllers,
+  cancelTournament,
   changeUserRole,
   checkAllLoadBalanceScreenshot,
   completeFfOrder,
@@ -33,5 +34,6 @@ router.route('/update-roomid-password/:tournamentId').patch(isAdminSubAdmin, add
 router.route('/get-all-tournament').get(isAdminSubAdmin, getAllTournament);
 router.route('/delete-tournament/:tournamentId').delete(isAdminSubAdmin, deleteTournament);
 router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
+router.route("/cancel-tournament/:tournamentId").post(isAdminSubAdmin,cancelTournament)
 
 export default router;
