@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkStatusNotificationOfBalance = exports.loadBalanceControllers = void 0;
+exports.exchangeCoin = exports.checkStatusNotificationOfBalance = exports.loadBalanceControllers = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const db_1 = __importDefault(require("../DB/db"));
@@ -84,3 +84,37 @@ const checkStatusNotificationOfBalance = (0, asyncHandler_1.default)((req, res) 
     }));
 }));
 exports.checkStatusNotificationOfBalance = checkStatusNotificationOfBalance;
+// exchnage coin
+const exchangeCoin = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    // @ts-ignore
+    const screenshot = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
+    if (!screenshot) {
+        throw new apiError_1.default(false, 400, 'screenshot is required');
+    }
+    // @ts-ignore
+    const { id } = req.user;
+    if (!id) {
+        throw new apiError_1.default(false, 400, 'User not found');
+    }
+    const { amount } = req.body;
+    if (!amount) {
+        throw new apiError_1.default(false, 400, 'amount is required');
+    }
+    const getQrUrl = yield (0, cloudinary_1.uploadToCloudinary)(screenshot);
+    if (!getQrUrl) {
+        throw new apiError_1.default(false, 400, 'Failed to upload screenshot to cloudinary');
+    }
+    const addToDb = yield db_1.default.exChangeCoin.create({
+        data: {
+            userId: id,
+            amount: Number(amount),
+            qrScreenshot: getQrUrl,
+        },
+    });
+    if (!addToDb) {
+        throw new apiError_1.default(false, 400, 'Failed to add to db');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Coin exchanged successfully', addToDb));
+}));
+exports.exchangeCoin = exchangeCoin;

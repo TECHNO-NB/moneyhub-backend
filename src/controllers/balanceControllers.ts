@@ -84,4 +84,39 @@ const checkStatusNotificationOfBalance = asyncHandler(
   }
 );
 
-export { loadBalanceControllers, checkStatusNotificationOfBalance };
+// exchnage coin
+const exchangeCoin = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+  // @ts-ignore
+  const screenshot = req.file?.path;
+  if (!screenshot) {
+    throw new ApiError(false, 400, 'screenshot is required');
+  }
+  // @ts-ignore
+  const { id } = req.user;
+  if (!id) {
+    throw new ApiError(false, 400, 'User not found');
+  }
+  const { amount } = req.body;
+  if (!amount) {
+    throw new ApiError(false, 400, 'amount is required');
+  }
+
+  const getQrUrl = await uploadToCloudinary(screenshot);
+  if (!getQrUrl) {
+    throw new ApiError(false, 400, 'Failed to upload screenshot to cloudinary');
+  }
+
+  const addToDb = await prisma.exChangeCoin.create({
+    data: {
+      userId: id,
+      amount: Number(amount),
+      qrScreenshot: getQrUrl,
+    },
+  });
+  if (!addToDb) {
+    throw new ApiError(false, 400, 'Failed to add to db');
+  }
+  return res.status(200).json(new ApiResponse(true, 200, 'Coin exchanged successfully', addToDb));
+});
+
+export { loadBalanceControllers, checkStatusNotificationOfBalance, exchangeCoin };

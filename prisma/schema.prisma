@@ -23,6 +23,7 @@ model User {
   ffTournament        ffTournament[]
   enteredFfTournament enteredFfTournament[]
   notification        notification[]
+  exChangeCoin        exChangeCoin[]
 }
 
 model LoadBalance {
@@ -35,6 +36,16 @@ model LoadBalance {
   userId            String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now()) @updatedAt
+}
+
+model exChangeCoin {
+  id           String @id @default(cuid())
+  qrScreenshot String
+  amount       Int
+  status       Status @default(pending)
+  message      String @default("Your coin is being processed.Your collect coin will be updated ")
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
 }
 
 model ffOrder {
