@@ -124,15 +124,23 @@ const loadCoinToUserWallet = (0, asyncHandler_1.default)((req, res) => __awaiter
 exports.loadCoinToUserWallet = loadCoinToUserWallet;
 // fetch all user details
 const getAllUserDetails = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { limit = 10, page = 0 } = req.query;
+    const skip = Number(page) * Number(limit);
+    const totalUsers = yield db_1.default.user.count();
     const allUser = yield db_1.default.user.findMany({
         orderBy: {
             updatedAt: 'desc',
         },
+        take: Number(limit),
+        skip: skip,
     });
+    const totalPage = Math.ceil(totalUsers / Number(limit));
     if (!allUser) {
         throw new apiError_1.default(false, 500, 'Unable to fetch all user');
     }
-    return res.status(200).json(new apiResponse_1.default(true, 200, 'All user fetched successfully', allUser));
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'All user fetched successfully', { allUser, totalPage }));
 }));
 exports.getAllUserDetails = getAllUserDetails;
 // fetch all ff order

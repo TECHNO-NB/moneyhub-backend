@@ -125,15 +125,23 @@ const loadCoinToUserWallet = asyncHandler(async (req, res): Promise<any> => {
 
 // fetch all user details
 const getAllUserDetails = asyncHandler(async (req, res): Promise<any> => {
+  const { limit = 10, page = 0 } = req.query;
+  const skip = Number(page) * Number(limit);
+  const totalUsers = await prisma.user.count();
   const allUser = await prisma.user.findMany({
     orderBy: {
       updatedAt: 'desc',
     },
+    take: Number(limit),
+    skip: skip,
   });
+  const totalPage = Math.ceil(totalUsers / Number(limit));
   if (!allUser) {
     throw new ApiError(false, 500, 'Unable to fetch all user');
   }
-  return res.status(200).json(new ApiResponse(true, 200, 'All user fetched successfully', allUser));
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'All user fetched successfully', { allUser, totalPage }));
 });
 
 // fetch all ff order
@@ -142,6 +150,7 @@ const allFfOrderControllers = asyncHandler(async (req, res): Promise<any> => {
     orderBy: {
       updatedAt: 'desc',
     },
+
     include: {
       user: {
         select: {
@@ -555,8 +564,8 @@ const cancelTournament = asyncHandler(async (req, res): Promise<any> => {
   // @ts-ignore
   const { tournamentId } = req.params;
   const { cost } = req.body;
-console.log(tournamentId,cost)
-  if (!tournamentId ) {
+  console.log(tournamentId, cost);
+  if (!tournamentId) {
     throw new ApiError(false, 400, 'Tournament ID and cost is required.');
   }
   const findTournament = await prisma.ffTournament.findUnique({
