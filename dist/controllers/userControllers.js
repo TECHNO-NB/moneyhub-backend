@@ -113,7 +113,13 @@ const logoutUserControllers = (0, asyncHandler_1.default)((req, res) => __awaite
 exports.logoutUserControllers = logoutUserControllers;
 // Get all ff topup list
 const getAllFfTopUpListControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const getAllFfTopUpList = yield db_1.default.ffTopUpRate.findMany();
+    const getAllFfTopUpList = yield db_1.default.ffTopUpRate.findMany({
+        select: {
+            diamondTitle: true,
+            price: true,
+            realPrice: true,
+        },
+    });
     if (!getAllFfTopUpList) {
         throw new apiError_1.default(false, 404, 'No ff top up list found');
     }
@@ -156,8 +162,6 @@ const saveNotificationTokenControllers = (0, asyncHandler_1.default)((req, res) 
     if (!user) {
         throw new apiError_1.default(false, 404, 'User not found');
     }
-    return res
-        .status(200)
-        .json(new apiResponse_1.default(true, 200, 'Save notification token', user));
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Save notification token', user));
 }));
 exports.saveNotificationTokenControllers = saveNotificationTokenControllers;

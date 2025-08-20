@@ -63,7 +63,7 @@ model ffOrder {
 }
 
 model ffTopUpRate {
-  id           Int    @id @default(autoincrement())
+  id           Int @id @default(autoincrement())
   diamondTitle String
   price        Float
   realPrice    Float?

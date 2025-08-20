@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.addFfTopupList = exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
@@ -552,3 +552,25 @@ const cancelTournament = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully cancel tournament'));
 }));
 exports.cancelTournament = cancelTournament;
+// add ff topup list and price
+const addFfTopupList = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { data } = req.body;
+    if (!data || !Array.isArray(data) || data.length === 0) {
+        throw new apiError_1.default(false, 400, 'Invalid top-up data');
+    }
+    const deleteAllFfTopup = yield db_1.default.ffTopUpRate.deleteMany({});
+    if (!deleteAllFfTopup) {
+        throw new apiError_1.default(false, 500, 'Failed to delete existing Free Fire topup rates');
+    }
+    const createFfTopup = yield db_1.default.ffTopUpRate.createMany({
+        data: data,
+    });
+    if (!createFfTopup || createFfTopup.count === 0) {
+        throw new apiError_1.default(false, 500, 'Failed to create Free Fire topup rates');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'FF topup created successfully', createFfTopup));
+}));
+exports.addFfTopupList = addFfTopupList;

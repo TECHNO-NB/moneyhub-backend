@@ -112,7 +112,13 @@ const logoutUserControllers = asyncHandler(async (req: Request, res: Response): 
 // Get all ff topup list
 const getAllFfTopUpListControllers = asyncHandler(
   async (req: Request, res: Response): Promise<any> => {
-    const getAllFfTopUpList = await prisma.ffTopUpRate.findMany();
+    const getAllFfTopUpList = await prisma.ffTopUpRate.findMany({
+      select: {
+        diamondTitle: true,
+        price: true,
+        realPrice: true,
+      },
+    });
 
     if (!getAllFfTopUpList) {
       throw new ApiError(false, 404, 'No ff top up list found');
@@ -143,7 +149,6 @@ const getAllFfTournamentControllers = asyncHandler(
 // saved notification token in db
 const saveNotificationTokenControllers = asyncHandler(
   async (req: Request, res: Response): Promise<any> => {
-  
     const { token } = req.body;
     // @ts-ignore
     const { id } = req.user;
@@ -160,14 +165,10 @@ const saveNotificationTokenControllers = asyncHandler(
         token: token,
       },
     });
-    if(!user){
-      throw new ApiError(false, 404, 'User not found')
+    if (!user) {
+      throw new ApiError(false, 404, 'User not found');
     }
-    return res
-    .status(200)
-    .json(new ApiResponse(true, 200, 'Save notification token', user));
-
-    
+    return res.status(200).json(new ApiResponse(true, 200, 'Save notification token', user));
   }
 );
 
@@ -177,5 +178,5 @@ export {
   logoutUserControllers,
   getAllFfTopUpListControllers,
   getAllFfTournamentControllers,
-  saveNotificationTokenControllers
+  saveNotificationTokenControllers,
 };

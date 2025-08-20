@@ -2,6 +2,7 @@ import express from 'express';
 import { isAdmin, isAdminSubAdmin } from '../../middlewares/authMiddleware';
 import {
   addCoinToUser,
+  addFfTopupList,
   addRoomIdAndPassword,
   allFfOrderControllers,
   cancelTournament,
@@ -34,6 +35,7 @@ router.route('/update-roomid-password/:tournamentId').patch(isAdminSubAdmin, add
 router.route('/get-all-tournament').get(isAdminSubAdmin, getAllTournament);
 router.route('/delete-tournament/:tournamentId').delete(isAdminSubAdmin, deleteTournament);
 router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
-router.route("/cancel-tournament/:tournamentId").post(isAdminSubAdmin,cancelTournament)
+router.route('/cancel-tournament/:tournamentId').post(isAdminSubAdmin, cancelTournament);
+router.route('/add-ff-toupup-rate').patch(isAdminSubAdmin, addFfTopupList);
 
 export default router;

@@ -616,6 +616,31 @@ const cancelTournament = asyncHandler(async (req, res): Promise<any> => {
   return res.status(200).json(new ApiResponse(true, 200, 'Successfully cancel tournament'));
 });
 
+// add ff topup list and price
+const addFfTopupList = asyncHandler(async (req, res): Promise<any> => {
+  // @ts-ignore
+  const { data } = req.body;
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    throw new ApiError(false, 400, 'Invalid top-up data');
+  }
+
+  const deleteAllFfTopup = await prisma.ffTopUpRate.deleteMany({});
+  if (!deleteAllFfTopup) {
+    throw new ApiError(false, 500, 'Failed to delete existing Free Fire topup rates');
+  }
+
+  const createFfTopup = await prisma.ffTopUpRate.createMany({
+    data: data,
+  });
+
+  if (!createFfTopup || createFfTopup.count === 0) {
+    throw new ApiError(false, 500, 'Failed to create Free Fire topup rates');
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'FF topup created successfully', createFfTopup));
+});
+
 export {
   checkAllLoadBalanceScreenshot,
   loadCoinToUserWallet,
@@ -632,4 +657,5 @@ export {
   deleteTournament,
   makeWinner,
   cancelTournament,
+  addFfTopupList,
 };

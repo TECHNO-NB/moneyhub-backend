@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node ./dist/index.js",
+    "db-cmd": "npx prisma generate && npx prisma migrate && npx prisma db push",
     "build": "tsc",
     "dev": "concurrently \"tsc -w\" \"nodemon --watch dist ./dist/index.js\"",
     "format": "prettier --write ."
