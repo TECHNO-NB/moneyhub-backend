@@ -43,7 +43,7 @@ model exChangeCoin {
   qrScreenshot String
   amount       Int
   status       Status @default(pending)
-  message      String @default("Your coin is being processed.Your collect coin will be updated ")
+  message      String @default("Your exChange coin is being processed.Your coin will trasferred to your account shortly.")
   user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
   updatedAt    DateTime @default(now()) @updatedAt

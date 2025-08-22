@@ -73,14 +73,18 @@ const checkStatusNotificationOfBalance = (0, asyncHandler_1.default)((req, res) 
         orderBy: { updatedAt: 'desc' },
         take: 3,
     });
+    // tournament notification
+    const coinExchange = yield db_1.default.exChangeCoin.findMany({
+        where: { userId: user.id },
+        orderBy: { updatedAt: 'desc' },
+        take: 3,
+    });
     // If both empty
-    if (!loadBalance.length && !ffOrders.length) {
-        throw new apiError_1.default(false, 400, 'No load balance or FF orders found');
-    }
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Notifications found', {
         loadBalance,
         ffOrders,
         tournament,
+        coinExchange,
     }));
 }));
 exports.checkStatusNotificationOfBalance = checkStatusNotificationOfBalance;

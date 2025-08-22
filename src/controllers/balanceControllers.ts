@@ -68,17 +68,21 @@ const checkStatusNotificationOfBalance = asyncHandler(
       orderBy: { updatedAt: 'desc' },
       take: 3,
     });
+    // tournament notification
+    const coinExchange = await prisma.exChangeCoin.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: 'desc' },
+      take: 3,
+    });
 
     // If both empty
-    if (!loadBalance.length && !ffOrders.length) {
-      throw new ApiError(false, 400, 'No load balance or FF orders found');
-    }
 
     return res.status(200).json(
       new ApiResponse(true, 200, 'Notifications found', {
         loadBalance,
         ffOrders,
         tournament,
+        coinExchange,
       })
     );
   }
