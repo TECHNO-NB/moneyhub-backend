@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addFfTopupList = exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.getAllWithdrawalRequests = exports.addFfTopupList = exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
@@ -380,22 +380,13 @@ const addRoomIdAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter
         throw new apiError_1.default(false, 400, 'invalid room id and password');
     }
     const updateRoomIdAndPassword = yield db_1.default.ffTournament.update({
-        where: {
-            id: tournamentId,
-        },
-        data: {
-            roomId,
-            password,
-        },
+        where: { id: tournamentId },
+        data: { roomId, password },
         include: {
             enteredFfTournament: {
                 select: {
                     userId: true,
-                    user: {
-                        select: {
-                            token: true,
-                        },
-                    },
+                    user: { select: { token: true } },
                 },
             },
         },
@@ -403,20 +394,45 @@ const addRoomIdAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter
     if (!updateRoomIdAndPassword) {
         throw new apiError_1.default(false, 404, 'Tournament not found');
     }
-    yield Promise.all(updateRoomIdAndPassword.enteredFfTournament.map((val) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
-        if ((_a = val.user) === null || _a === void 0 ? void 0 : _a.token) {
-            yield sendNotification(val.user.token, 'FF Tournament Is Started.', `Room Id: ${roomId}  Password: ${password}`);
+    // Collect all valid tokens
+    const tokens = updateRoomIdAndPassword.enteredFfTournament
+        .map((val) => { var _a; return (_a = val.user) === null || _a === void 0 ? void 0 : _a.token; })
+        .filter((token) => Boolean(token));
+    if (tokens.length > 0) {
+        try {
+            const message = {
+                notification: {
+                    title: 'FF Tournament Is Started.',
+                    body: `Room Id: ${roomId}  Password: ${password}`,
+                },
+                tokens, // all tokens at once
+            };
+            const response = yield app_1.admin.messaging().sendEachForMulticast(message);
+            console.log(`✅ Notifications sent: ${response.successCount}, ❌ Failed: ${response.failureCount}`);
+            if (response.failureCount > 0) {
+                response.responses.forEach((r, i) => {
+                    var _a;
+                    if (!r.success) {
+                        console.log(`Failed token: ${tokens[i]}`, (_a = r.error) === null || _a === void 0 ? void 0 : _a.message);
+                        // Optionally remove invalid token from DB here
+                    }
+                });
+            }
         }
-    })));
-    const message = `Tournament started.Room Id: ${roomId} Password: ${password}`;
-    const updateTournament = yield db_1.default.enteredFfTournament.updateMany({
+        catch (err) {
+            console.error('Error sending notifications:', err);
+        }
+    }
+    const messageText = `Tournament started. Room Id: ${roomId} Password: ${password}`;
+    yield db_1.default.enteredFfTournament.updateMany({
         data: {
-            message,
+            message: messageText,
             status: 'started',
         },
     });
-    return res.status(200).json(new apiResponse_1.default(true, 200, 'Room id and password'));
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Room id and password updated and notifications sent'));
 }));
 exports.addRoomIdAndPassword = addRoomIdAndPassword;
 // delete the tournament
@@ -574,3 +590,27 @@ const addFfTopupList = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
         .json(new apiResponse_1.default(true, 200, 'FF topup created successfully', createFfTopup));
 }));
 exports.addFfTopupList = addFfTopupList;
+// get all user withdrawal requests
+const getAllWithdrawalRequests = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const withdrawalRequests = yield db_1.default.exChangeCoin.findMany({
+        orderBy: {
+            updatedAt: 'desc',
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    fullName: true,
+                    balance: true,
+                }
+            },
+        },
+    });
+    if (!withdrawalRequests || withdrawalRequests.length === 0) {
+        throw new apiError_1.default(false, 404, 'No withdrawal requests found');
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, 'Withdrawal requests fetched successfully', withdrawalRequests));
+}));
+exports.getAllWithdrawalRequests = getAllWithdrawalRequests;

@@ -14,6 +14,7 @@ import {
   deleteUser,
   getAllTournament,
   getAllUserDetails,
+  getAllWithdrawalRequests,
   loadCoinToUserWallet,
   makeWinner,
   removeCoinFromUser,
@@ -37,5 +38,6 @@ router.route('/delete-tournament/:tournamentId').delete(isAdminSubAdmin, deleteT
 router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
 router.route('/cancel-tournament/:tournamentId').post(isAdminSubAdmin, cancelTournament);
 router.route('/add-ff-toupup-rate').patch(isAdminSubAdmin, addFfTopupList);
+router.route('/withdrawal-requests').get(isAdmin, getAllWithdrawalRequests);
 
 export default router;

@@ -400,7 +400,6 @@ const getAllTournament = asyncHandler(async (req, res): Promise<any> => {
 const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
   // @ts-ignore
   const { tournamentId } = req.params;
-
   const { roomId, password } = req.body;
 
   if (!tournamentId) {
@@ -409,23 +408,15 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
   if (!roomId || !password) {
     throw new ApiError(false, 400, 'invalid room id and password');
   }
+
   const updateRoomIdAndPassword = await prisma.ffTournament.update({
-    where: {
-      id: tournamentId,
-    },
-    data: {
-      roomId,
-      password,
-    },
+    where: { id: tournamentId },
+    data: { roomId, password },
     include: {
       enteredFfTournament: {
         select: {
           userId: true,
-          user: {
-            select: {
-              token: true,
-            },
-          },
+          user: { select: { token: true } },
         },
       },
     },
@@ -434,28 +425,52 @@ const addRoomIdAndPassword = asyncHandler(async (req, res): Promise<any> => {
   if (!updateRoomIdAndPassword) {
     throw new ApiError(false, 404, 'Tournament not found');
   }
-  await Promise.all(
-    updateRoomIdAndPassword.enteredFfTournament.map(async (val) => {
-      if (val.user?.token) {
-        await sendNotification(
-          val.user.token,
-          'FF Tournament Is Started.',
-          `Room Id: ${roomId}  Password: ${password}`
-        );
+
+  // Collect all valid tokens
+  const tokens: string[] = updateRoomIdAndPassword.enteredFfTournament
+    .map((val) => val.user?.token)
+    .filter((token): token is string => Boolean(token));
+
+  if (tokens.length > 0) {
+    try {
+      const message = {
+        notification: {
+          title: 'FF Tournament Is Started.',
+          body: `Room Id: ${roomId}  Password: ${password}`,
+        },
+        tokens, // all tokens at once
+      };
+
+      const response = await admin.messaging().sendEachForMulticast(message);
+
+      console.log(
+        `✅ Notifications sent: ${response.successCount}, ❌ Failed: ${response.failureCount}`
+      );
+      if (response.failureCount > 0) {
+        response.responses.forEach((r, i) => {
+          if (!r.success) {
+            console.log(`Failed token: ${tokens[i]}`, r.error?.message);
+            // Optionally remove invalid token from DB here
+          }
+        });
       }
-    })
-  );
+    } catch (err) {
+      console.error('Error sending notifications:', err);
+    }
+  }
 
-  const message = `Tournament started.Room Id: ${roomId} Password: ${password}`;
+  const messageText = `Tournament started. Room Id: ${roomId} Password: ${password}`;
 
-  const updateTournament = await prisma.enteredFfTournament.updateMany({
+  await prisma.enteredFfTournament.updateMany({
     data: {
-      message,
+      message: messageText,
       status: 'started',
     },
   });
 
-  return res.status(200).json(new ApiResponse(true, 200, 'Room id and password'));
+  return res
+    .status(200)
+    .json(new ApiResponse(true, 200, 'Room id and password updated and notifications sent'));
 });
 
 // delete the tournament
@@ -641,6 +656,34 @@ const addFfTopupList = asyncHandler(async (req, res): Promise<any> => {
     .json(new ApiResponse(true, 200, 'FF topup created successfully', createFfTopup));
 });
 
+// get all user withdrawal requests
+
+const getAllWithdrawalRequests = asyncHandler(async (req, res): Promise<any> => {
+  const withdrawalRequests = await prisma.exChangeCoin.findMany({
+    orderBy: {
+      updatedAt: 'desc',
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          balance: true,
+        }
+      },
+    },
+  });
+
+  if (!withdrawalRequests || withdrawalRequests.length === 0) {
+    throw new ApiError(false, 404, 'No withdrawal requests found');
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(true, 200, 'Withdrawal requests fetched successfully', withdrawalRequests)
+    );
+});
+
 export {
   checkAllLoadBalanceScreenshot,
   loadCoinToUserWallet,
@@ -658,4 +701,5 @@ export {
   makeWinner,
   cancelTournament,
   addFfTopupList,
+  getAllWithdrawalRequests
 };

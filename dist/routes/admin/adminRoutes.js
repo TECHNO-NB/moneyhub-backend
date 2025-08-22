@@ -23,4 +23,5 @@ router.route('/delete-tournament/:tournamentId').delete(authMiddleware_1.isAdmin
 router.route('/make-winner/:winnerId').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.makeWinner);
 router.route('/cancel-tournament/:tournamentId').post(authMiddleware_1.isAdminSubAdmin, adminControllers_1.cancelTournament);
 router.route('/add-ff-toupup-rate').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.addFfTopupList);
+router.route('/withdrawal-requests').get(authMiddleware_1.isAdmin, adminControllers_1.getAllWithdrawalRequests);
 exports.default = router;

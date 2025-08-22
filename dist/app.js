@@ -24,6 +24,8 @@ const ffOrderRoutes_1 = __importDefault(require("./routes/ffOrderRoutes"));
 const ffTournamentRoutes_1 = __importDefault(require("./routes/ffTournamentRoutes"));
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 exports.admin = firebase_admin_1.default;
+const helmet_1 = __importDefault(require("helmet"));
+const compression_1 = __importDefault(require("compression"));
 const app = (0, express_1.default)();
 exports.app = app;
 // default middleware
@@ -33,6 +35,8 @@ app.use((0, cors_1.default)({
     credentials: true,
 }));
 app.use((0, cookie_parser_1.default)());
+app.use((0, helmet_1.default)());
+app.use((0, compression_1.default)());
 app.use(express_1.default.json({
     limit: '5mb',
 }));

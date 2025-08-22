@@ -8,6 +8,9 @@ import checkPayment from './routes/admin/adminRoutes';
 import fforder from './routes/ffOrderRoutes';
 import ffTournamentRoute from './routes/ffTournamentRoutes';
 import admin from 'firebase-admin';
+import helmet from 'helmet';
+import compression from 'compression';
+
 
 const app = express();
 
@@ -20,6 +23,9 @@ app.use(
   })
 );
 app.use(cookieParser());
+app.use(helmet());
+app.use(compression());
+
 app.use(
   express.json({
     limit: '5mb',

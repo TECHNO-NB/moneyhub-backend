@@ -46,6 +46,7 @@ model exChangeCoin {
   message      String @default("Your coin is being processed.Your collect coin will be updated ")
   user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
 model ffOrder {
