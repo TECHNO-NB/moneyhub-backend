@@ -5,6 +5,8 @@ import prisma from '../DB/db';
 import ApiResponse from '../utils/apiResponse';
 import generateRefreshAcessToken from '../helpers/generateJwtTokens';
 import { cookieOptions } from '../helpers/cookieOption';
+import { uploadToCloudinary } from '../utils/cloudinary';
+import { comparePassword, hashPassword } from '../utils/hash';
 
 const signInControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
   const { token } = req.body;
@@ -73,6 +75,81 @@ const signInControllers = asyncHandler(async (req: Request, res: Response): Prom
     .status(201)
     .json(new ApiResponse(true, 201, 'User signin successfully', user));
 });
+
+
+// user register 
+const registerUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+  const { email, fullName,password } = req.body;
+  const avatar=req.file?.path;
+  if(!avatar){
+    throw new ApiError(false, 400, 'Avatar is required');
+  }
+
+  if (!email || !fullName || !password) {
+    throw new ApiError(false, 400, 'Please fill the all required field');
+  }
+  const alreadyRegisterUser = await prisma.user.findUnique({ where: { email: email } });
+  if (alreadyRegisterUser) {
+    throw new ApiError(false, 400, 'User already register with this email');
+  }
+  const hashedPassword = await hashPassword(password);
+  if (!hashedPassword) {
+    throw new ApiError(false, 500, 'Password hash failed');
+  }
+
+  const cloudinaryUrl = await uploadToCloudinary(avatar);
+  if (!cloudinaryUrl) {
+    throw new ApiError(false, 500, 'Avatar upload failed');
+  }
+
+  const userData = {
+    email: email,
+    fullName: fullName,
+    avatar: cloudinaryUrl,
+    password: hashedPassword,
+  };
+  const createUser = await prisma.user.create({
+    data: userData,
+  });
+  if (!createUser) {
+    throw new ApiError(false, 500, 'User register failed');
+  }
+  return res.status(201).json(new ApiResponse(true, 201, 'User register successfully', createUser));
+});
+
+
+// login user
+const loginUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    throw new ApiError(false, 400, 'Please fill the all required field');
+  }
+  const user = await prisma.user.findUnique({ where: { email: email } });
+  if (!user || !user.password) {
+    throw new ApiError(false, 404, 'User not found');
+  }
+  const isPasswordMatch = await comparePassword(password, user.password);
+  if (!isPasswordMatch) {
+    throw new ApiError(false, 400, 'Invalid password');
+  }
+  const dataOfUser = {
+    id: user?.id,
+    email: user?.email,
+    fullName: user?.fullName,
+    avatar: user?.avatar,
+    balance: user?.balance,
+  };
+  const generateJwtToken = await generateRefreshAcessToken(dataOfUser);
+  if (!generateJwtToken.accessToken || !generateJwtToken.refreshToken) {
+    throw new ApiError(false, 500, 'Jwt Token Generate failed');
+  }
+  return res
+    .cookie('accessToken', generateJwtToken.accessToken, cookieOptions)
+    .cookie('refreshToken', generateJwtToken.refreshToken, cookieOptions)
+    .status(200)
+    .json(new ApiResponse(true, 200, 'User login successfully', user));
+});
+
 
 // verify user
 const verifyUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
@@ -179,4 +256,6 @@ export {
   getAllFfTopUpListControllers,
   getAllFfTournamentControllers,
   saveNotificationTokenControllers,
+  registerUserControllers,
+  loginUserControllers
 };

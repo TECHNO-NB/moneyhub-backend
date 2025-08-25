@@ -12,6 +12,7 @@ model User {
   email               String                @unique
   fullName            String
   avatar              String
+  password            String?
   balance             Int                   @default(0)
   role                Role                  @default(user)
   refreshToken        String?
