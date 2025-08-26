@@ -92,7 +92,7 @@ const registerUserControllers = (0, asyncHandler_1.default)((req, res) => __awai
     }
     const alreadyRegisterUser = yield db_1.default.user.findUnique({ where: { email: email } });
     if (alreadyRegisterUser) {
-        throw new apiError_1.default(false, 400, 'User already register with this email');
+        throw new apiError_1.default(false, 409, 'User already register with this email');
     }
     const hashedPassword = yield (0, hash_1.hashPassword)(password);
     if (!hashedPassword) {
@@ -187,6 +187,7 @@ exports.logoutUserControllers = logoutUserControllers;
 const getAllFfTopUpListControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const getAllFfTopUpList = yield db_1.default.ffTopUpRate.findMany({
         select: {
+            id: true,
             diamondTitle: true,
             price: true,
             realPrice: true,

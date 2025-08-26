@@ -90,7 +90,7 @@ const registerUserControllers = asyncHandler(async (req: Request, res: Response)
   }
   const alreadyRegisterUser = await prisma.user.findUnique({ where: { email: email } });
   if (alreadyRegisterUser) {
-    throw new ApiError(false, 400, 'User already register with this email');
+    throw new ApiError(false, 409, 'User already register with this email');
   }
   const hashedPassword = await hashPassword(password);
   if (!hashedPassword) {
@@ -191,6 +191,7 @@ const getAllFfTopUpListControllers = asyncHandler(
   async (req: Request, res: Response): Promise<any> => {
     const getAllFfTopUpList = await prisma.ffTopUpRate.findMany({
       select: {
+        id: true,
         diamondTitle: true,
         price: true,
         realPrice: true,
