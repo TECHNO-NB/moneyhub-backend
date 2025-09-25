@@ -16,3 +16,7 @@ config/config.json
 ../config/
 config
 
+./test
+
+./src/test
+

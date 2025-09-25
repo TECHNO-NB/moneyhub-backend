@@ -10,6 +10,8 @@ import ffTournamentRoute from './routes/ffTournamentRoutes';
 import admin from 'firebase-admin';
 import helmet from 'helmet';
 import compression from 'compression';
+import morgan from "morgan"
+import rateLimit from 'express-rate-limit';
 
 
 const app = express();
@@ -22,9 +24,23 @@ app.use(
     credentials: true,
   })
 );
+
+const limiter=rateLimit({
+  windowMs: 1 * 60 * 1000,
+   max:50,
+   handler: (req, res, next) => {
+     console.log(`Rate limit hit`)
+    res.status(429).json({ message: 'Too many requests, slow down!' })
+  },
+  standardHeaders:true,
+  legacyHeaders:false,
+})
+
+app.use(limiter);
 app.use(cookieParser());
 app.use(helmet());
 app.use(compression());
+app.use(morgan('short'))
 
 app.use(
   express.json({
@@ -85,5 +101,6 @@ app.use('/api/v1/tournament', ffTournamentRoute);
 // server check api
 app.get('/', async (req, res) => {
   res.send('MoneyHub Server is running');
+
 });
 export { app, admin };

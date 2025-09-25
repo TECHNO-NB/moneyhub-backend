@@ -26,6 +26,8 @@ const firebase_admin_1 = __importDefault(require("firebase-admin"));
 exports.admin = firebase_admin_1.default;
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
+const morgan_1 = __importDefault(require("morgan"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const app = (0, express_1.default)();
 exports.app = app;
 // default middleware
@@ -34,9 +36,21 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'UPDATE', 'PATCH'],
     credentials: true,
 }));
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 1 * 60 * 1000,
+    max: 50,
+    handler: (req, res, next) => {
+        console.log(`Rate limit hit`);
+        res.status(429).json({ message: 'Too many requests, slow down!' });
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use(limiter);
 app.use((0, cookie_parser_1.default)());
 app.use((0, helmet_1.default)());
 app.use((0, compression_1.default)());
+app.use((0, morgan_1.default)('short'));
 app.use(express_1.default.json({
     limit: '5mb',
 }));

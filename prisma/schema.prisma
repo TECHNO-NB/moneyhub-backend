@@ -108,6 +108,7 @@ model notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   message   String
+  
   status    Status   @default(started)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

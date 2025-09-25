@@ -17,3 +17,8 @@ src/legacy-code.ts
 # Ignore frontend folder
 client/
 ./config
+
+./test
+test
+test.js
+./src/test
