@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const authMiddleware_1 = require("../../middlewares/authMiddleware");
 const adminControllers_1 = require("../../controllers/adminControllers");
+const multerMiddleware_1 = __importDefault(require("../../middlewares/multerMiddleware"));
 const router = express_1.default.Router();
 router.route('/check-payment').get(authMiddleware_1.isAdmin, adminControllers_1.checkAllLoadBalanceScreenshot);
 router.route('/update-balance/:orderId').patch(authMiddleware_1.isAdmin, adminControllers_1.loadCoinToUserWallet);
@@ -24,4 +25,6 @@ router.route('/make-winner/:winnerId').patch(authMiddleware_1.isAdminSubAdmin, a
 router.route('/cancel-tournament/:tournamentId').post(authMiddleware_1.isAdminSubAdmin, adminControllers_1.cancelTournament);
 router.route('/add-ff-toupup-rate').patch(authMiddleware_1.isAdminSubAdmin, adminControllers_1.addFfTopupList);
 router.route('/withdrawal-requests').get(authMiddleware_1.isAdmin, adminControllers_1.getAllWithdrawalRequests);
+router.route('/add-banner').post(authMiddleware_1.isAdminSubAdmin, multerMiddleware_1.default.single("banner"), adminControllers_1.addBannerControllers);
+router.route('/delete-banner').delete(authMiddleware_1.isAdmin, adminControllers_1.deleteBanner);
 exports.default = router;

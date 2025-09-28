@@ -4,7 +4,8 @@ import prisma from '../DB/db';
 import ApiError from '../utils/apiError';
 import ApiResponse from '../utils/apiResponse';
 import asyncHandler from '../utils/asyncHandler';
-import { deleteCloudinaryImage } from '../utils/cloudinary';
+import { deleteCloudinaryImage, uploadToCloudinary } from '../utils/cloudinary';
+import { type } from 'os';
 
 const sendNotification = async (
   token: string | null | undefined,
@@ -669,7 +670,7 @@ const getAllWithdrawalRequests = asyncHandler(async (req, res): Promise<any> => 
           id: true,
           fullName: true,
           balance: true,
-        }
+        },
       },
     },
   });
@@ -682,6 +683,54 @@ const getAllWithdrawalRequests = asyncHandler(async (req, res): Promise<any> => 
     .json(
       new ApiResponse(true, 200, 'Withdrawal requests fetched successfully', withdrawalRequests)
     );
+});
+
+// add banner
+const addBannerControllers = asyncHandler(async (req, res): Promise<any> => {
+  const banner = req.file?.path;
+  if (!banner) {
+    throw new ApiError(false, 400, 'Image is required');
+  }
+  const getUrlFromCloudinary = await uploadToCloudinary(banner);
+  if (!getUrlFromCloudinary) {
+    throw new ApiError(false, 500, 'Unable to get cloudinary url');
+  }
+
+  const createBanner = await prisma.banner.create({
+    data: {
+      image: getUrlFromCloudinary,
+    },
+  });
+  if (!createBanner) {
+    throw new ApiError(false, 500, 'Unable to saved banner');
+  }
+
+  return res.status(200).json(new ApiResponse(true, 201, 'Successfully added new banner'));
+});
+
+
+
+
+// Delete banner 
+type T=any;
+
+const deleteBanner = asyncHandler(async (req, res):Promise<T>=> {
+  const { id } = req.params;
+  if (!id) {
+    throw new ApiError(false, 400, 'Image Id is required');
+  }
+
+  const deleteBanner = await prisma.banner.delete({
+    where: {
+      id,
+    },
+  });
+
+  if (!deleteBanner) {
+    throw new ApiError(false, 500, 'Banner not deleted');
+  }
+
+  return res.status(200).json(new ApiResponse(true, 200, 'Successfully deleted the banner'));
 });
 
 export {
@@ -701,5 +750,7 @@ export {
   makeWinner,
   cancelTournament,
   addFfTopupList,
-  getAllWithdrawalRequests
+  getAllWithdrawalRequests,
+  addBannerControllers,
+  deleteBanner
 };

@@ -1,6 +1,7 @@
 import express from 'express';
 import { isAdmin, isAdminSubAdmin } from '../../middlewares/authMiddleware';
 import {
+  addBannerControllers,
   addCoinToUser,
   addFfTopupList,
   addRoomIdAndPassword,
@@ -10,6 +11,7 @@ import {
   checkAllLoadBalanceScreenshot,
   completeFfOrder,
   createFreeFireTournament,
+  deleteBanner,
   deleteTournament,
   deleteUser,
   getAllTournament,
@@ -19,6 +21,7 @@ import {
   makeWinner,
   removeCoinFromUser,
 } from '../../controllers/adminControllers';
+import upload from '../../middlewares/multerMiddleware';
 
 const router = express.Router();
 
@@ -39,5 +42,7 @@ router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
 router.route('/cancel-tournament/:tournamentId').post(isAdminSubAdmin, cancelTournament);
 router.route('/add-ff-toupup-rate').patch(isAdminSubAdmin, addFfTopupList);
 router.route('/withdrawal-requests').get(isAdmin, getAllWithdrawalRequests);
+router.route('/add-banner').post(isAdminSubAdmin,upload.single("banner"), addBannerControllers);
+router.route('/delete-banner').delete(isAdmin, deleteBanner);
 
 export default router;

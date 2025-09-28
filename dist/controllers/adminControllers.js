@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllWithdrawalRequests = exports.addFfTopupList = exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
+exports.deleteBanner = exports.addBannerControllers = exports.getAllWithdrawalRequests = exports.addFfTopupList = exports.cancelTournament = exports.makeWinner = exports.deleteTournament = exports.getAllTournament = exports.addRoomIdAndPassword = exports.createFreeFireTournament = exports.removeCoinFromUser = exports.addCoinToUser = exports.changeUserRole = exports.deleteUser = exports.completeFfOrder = exports.allFfOrderControllers = exports.getAllUserDetails = exports.loadCoinToUserWallet = exports.checkAllLoadBalanceScreenshot = void 0;
 const app_1 = require("../app");
 const db_1 = __importDefault(require("../DB/db"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
@@ -602,7 +602,7 @@ const getAllWithdrawalRequests = (0, asyncHandler_1.default)((req, res) => __awa
                     id: true,
                     fullName: true,
                     balance: true,
-                }
+                },
             },
         },
     });
@@ -614,3 +614,41 @@ const getAllWithdrawalRequests = (0, asyncHandler_1.default)((req, res) => __awa
         .json(new apiResponse_1.default(true, 200, 'Withdrawal requests fetched successfully', withdrawalRequests));
 }));
 exports.getAllWithdrawalRequests = getAllWithdrawalRequests;
+// add banner
+const addBannerControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const banner = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
+    if (!banner) {
+        throw new apiError_1.default(false, 400, 'Image is required');
+    }
+    const getUrlFromCloudinary = yield (0, cloudinary_1.uploadToCloudinary)(banner);
+    if (!getUrlFromCloudinary) {
+        throw new apiError_1.default(false, 500, 'Unable to get cloudinary url');
+    }
+    const createBanner = yield db_1.default.banner.create({
+        data: {
+            image: getUrlFromCloudinary,
+        },
+    });
+    if (!createBanner) {
+        throw new apiError_1.default(false, 500, 'Unable to saved banner');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 201, 'Successfully added new banner'));
+}));
+exports.addBannerControllers = addBannerControllers;
+const deleteBanner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    if (!id) {
+        throw new apiError_1.default(false, 400, 'Image Id is required');
+    }
+    const deleteBanner = yield db_1.default.banner.delete({
+        where: {
+            id,
+        },
+    });
+    if (!deleteBanner) {
+        throw new apiError_1.default(false, 500, 'Banner not deleted');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Successfully deleted the banner'));
+}));
+exports.deleteBanner = deleteBanner;

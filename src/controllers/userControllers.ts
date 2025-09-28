@@ -250,6 +250,19 @@ const saveNotificationTokenControllers = asyncHandler(
   }
 );
 
+
+
+// get all banner
+const getAllBanner=asyncHandler(async(req,res):Promise<any>=>{
+  const getBanner=await prisma.banner.findMany()
+  if(!getBanner){
+    throw new ApiError(false,500,"Failed to get all Banner")
+  }
+  return res
+  .status(200)
+  .json(new ApiResponse(true,200,"Get all banner successfully",getBanner))
+})
+
 export {
   signInControllers,
   verifyUserControllers,
@@ -258,5 +271,6 @@ export {
   getAllFfTournamentControllers,
   saveNotificationTokenControllers,
   registerUserControllers,
-  loginUserControllers
+  loginUserControllers,
+  getAllBanner
 };

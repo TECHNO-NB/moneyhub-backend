@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getAllBanner,
   getAllFfTopUpListControllers,
   getAllFfTournamentControllers,
   loginUserControllers,
@@ -22,4 +23,6 @@ router.route('/log-out').get(jwtVerify, logoutUserControllers);
 router.route('/get-topup-list').get(getAllFfTopUpListControllers);
 router.route('/get-ff-tournament').get(getAllFfTournamentControllers);
 router.route('/token').post(jwtVerify, saveNotificationTokenControllers);
+router.route('/get-all-banner').get(getAllBanner);
+
 export default router;

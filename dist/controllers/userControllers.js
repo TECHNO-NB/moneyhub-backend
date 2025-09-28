@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginUserControllers = exports.registerUserControllers = exports.saveNotificationTokenControllers = exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
+exports.getAllBanner = exports.loginUserControllers = exports.registerUserControllers = exports.saveNotificationTokenControllers = exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const db_1 = __importDefault(require("../DB/db"));
@@ -238,3 +238,14 @@ const saveNotificationTokenControllers = (0, asyncHandler_1.default)((req, res) 
     return res.status(200).json(new apiResponse_1.default(true, 200, 'Save notification token', user));
 }));
 exports.saveNotificationTokenControllers = saveNotificationTokenControllers;
+// get all banner
+const getAllBanner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const getBanner = yield db_1.default.banner.findMany();
+    if (!getBanner) {
+        throw new apiError_1.default(false, 500, "Failed to get all Banner");
+    }
+    return res
+        .status(200)
+        .json(new apiResponse_1.default(true, 200, "Get all banner successfully", getBanner));
+}));
+exports.getAllBanner = getAllBanner;

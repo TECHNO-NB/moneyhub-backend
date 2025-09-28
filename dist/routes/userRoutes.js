@@ -16,4 +16,5 @@ router.route('/log-out').get(authMiddleware_1.jwtVerify, userControllers_1.logou
 router.route('/get-topup-list').get(userControllers_1.getAllFfTopUpListControllers);
 router.route('/get-ff-tournament').get(userControllers_1.getAllFfTournamentControllers);
 router.route('/token').post(authMiddleware_1.jwtVerify, userControllers_1.saveNotificationTokenControllers);
+router.route('/get-all-banner').get(userControllers_1.getAllBanner);
 exports.default = router;

@@ -40,12 +40,12 @@ model LoadBalance {
 }
 
 model exChangeCoin {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   qrScreenshot String
   amount       Int
-  status       Status @default(pending)
-  message      String @default("Your exChange coin is being processed.Your coin will trasferred to your account shortly.")
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       Status   @default(pending)
+  message      String   @default("Your exChange coin is being processed.Your coin will trasferred to your account shortly.")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
   updatedAt    DateTime @default(now()) @updatedAt
 }
@@ -65,7 +65,7 @@ model ffOrder {
 }
 
 model ffTopUpRate {
-  id           Int @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   diamondTitle String
   price        Float
   realPrice    Float?
@@ -104,20 +104,31 @@ model enteredFfTournament {
 }
 
 model notification {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  message   String
-  
-  status    Status   @default(started)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id              String             @id @default(cuid())
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  message         String
+  notificationFor TypeOfNotification
+  status          Status             @default(started)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+}
+
+model banner {
+  id  String @id @default(cuid())
+  image String
+  createdAt  DateTime   @default(now())
 }
 
 enum Role {
   user
   admin
   subadmin
+}
+
+enum TypeOfNotification {
+  freefire
+  coin
 }
 
 enum Status {
