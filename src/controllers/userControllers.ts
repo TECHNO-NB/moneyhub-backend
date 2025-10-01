@@ -76,12 +76,11 @@ const signInControllers = asyncHandler(async (req: Request, res: Response): Prom
     .json(new ApiResponse(true, 201, 'User signin successfully', user));
 });
 
-
-// user register 
+// user register
 const registerUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
-  const { email, fullName,password } = req.body;
-  const avatar=req.file?.path;
-  if(!avatar){
+  const { email, fullName, password } = req.body;
+  const avatar = req.file?.path;
+  if (!avatar) {
     throw new ApiError(false, 400, 'Avatar is required');
   }
 
@@ -117,7 +116,6 @@ const registerUserControllers = asyncHandler(async (req: Request, res: Response)
   return res.status(201).json(new ApiResponse(true, 201, 'User register successfully', createUser));
 });
 
-
 // login user
 const loginUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
@@ -149,7 +147,6 @@ const loginUserControllers = asyncHandler(async (req: Request, res: Response): P
     .status(200)
     .json(new ApiResponse(true, 200, 'User login successfully', user));
 });
-
 
 // verify user
 const verifyUserControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
@@ -250,18 +247,77 @@ const saveNotificationTokenControllers = asyncHandler(
   }
 );
 
-
-
 // get all banner
-const getAllBanner=asyncHandler(async(req,res):Promise<any>=>{
-  const getBanner=await prisma.banner.findMany()
-  if(!getBanner){
-    throw new ApiError(false,500,"Failed to get all Banner")
+const getAllBanner = asyncHandler(async (req, res): Promise<any> => {
+  const getBanner = await prisma.banner.findMany();
+  if (!getBanner) {
+    throw new ApiError(false, 500, 'Failed to get all Banner');
   }
+  return res.status(200).json(new ApiResponse(true, 200, 'Get all banner successfully', getBanner));
+});
+
+// Transfer coin to another account
+const sendCoinControllers = asyncHandler(async (req, res) :Promise<any>=> {
+  const { id, coin } = req.body;
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(false, 400, 'User ID is Required');
+  }
+
+  if (!id || !coin) {
+    throw new ApiError(false, 400, 'Coin And Id is Required');
+  }
+
+  const getUserCoin = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      balance: true,
+    },
+  });
+
+  if (!getUserCoin) {
+    throw new ApiError(false, 400, 'User not found');
+  }
+
+  if (getUserCoin.balance <= coin) {
+    throw new ApiError(false, 400, 'Coin is less then have');
+  }
+
+  const decrementCoin=await prisma.user.update({
+    where:{
+      id:userId
+    },
+    data:{
+      balance:{
+        decrement:coin
+      }
+    }
+  })
+
+  if(!decrementCoin){
+     throw new ApiError(false, 400, 'Error to Decrement coin');
+  }
+
+  const updateCoin = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      balance: {
+        increment: coin,
+      },
+    },
+  });
+  if(!updateCoin){
+    throw new ApiError(false, 400, 'Error to Increment coin');
+  }
+
   return res
   .status(200)
-  .json(new ApiResponse(true,200,"Get all banner successfully",getBanner))
-})
+  .json(new ApiResponse(true,200,"Coin Trasfer successfully"))
+});
 
 export {
   signInControllers,
@@ -272,5 +328,6 @@ export {
   saveNotificationTokenControllers,
   registerUserControllers,
   loginUserControllers,
-  getAllBanner
+  getAllBanner,
+  sendCoinControllers,
 };

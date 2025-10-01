@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllBanner = exports.loginUserControllers = exports.registerUserControllers = exports.saveNotificationTokenControllers = exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
+exports.sendCoinControllers = exports.getAllBanner = exports.loginUserControllers = exports.registerUserControllers = exports.saveNotificationTokenControllers = exports.getAllFfTournamentControllers = exports.getAllFfTopUpListControllers = exports.logoutUserControllers = exports.verifyUserControllers = exports.signInControllers = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const db_1 = __importDefault(require("../DB/db"));
@@ -79,7 +79,7 @@ const signInControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(vo
         .json(new apiResponse_1.default(true, 201, 'User signin successfully', user));
 }));
 exports.signInControllers = signInControllers;
-// user register 
+// user register
 const registerUserControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { email, fullName, password } = req.body;
@@ -242,10 +242,63 @@ exports.saveNotificationTokenControllers = saveNotificationTokenControllers;
 const getAllBanner = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const getBanner = yield db_1.default.banner.findMany();
     if (!getBanner) {
-        throw new apiError_1.default(false, 500, "Failed to get all Banner");
+        throw new apiError_1.default(false, 500, 'Failed to get all Banner');
+    }
+    return res.status(200).json(new apiResponse_1.default(true, 200, 'Get all banner successfully', getBanner));
+}));
+exports.getAllBanner = getAllBanner;
+// Transfer coin to another account
+const sendCoinControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, coin } = req.body;
+    const { userId } = req.params;
+    if (!userId) {
+        throw new apiError_1.default(false, 400, 'User ID is Required');
+    }
+    if (!id || !coin) {
+        throw new apiError_1.default(false, 400, 'Coin And Id is Required');
+    }
+    const getUserCoin = yield db_1.default.user.findUnique({
+        where: {
+            id: userId,
+        },
+        select: {
+            balance: true,
+        },
+    });
+    if (!getUserCoin) {
+        throw new apiError_1.default(false, 400, 'User not found');
+    }
+    if (getUserCoin.balance <= coin) {
+        throw new apiError_1.default(false, 400, 'Coin is less then have');
+    }
+    const decrementCoin = yield db_1.default.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            balance: {
+                decrement: coin
+            }
+        }
+    });
+    if (!decrementCoin) {
+        throw new apiError_1.default(false, 400, 'Error to Decrement coin');
+    }
+    const updateCoin = yield db_1.default.user.update({
+        where: {
+            id: id,
+        },
+        data: {
+            balance: {
+                increment: coin,
+            },
+        },
+    });
+    if (!updateCoin) {
+        throw new apiError_1.default(false, 400, 'Error to Increment coin');
     }
     return res
         .status(200)
-        .json(new apiResponse_1.default(true, 200, "Get all banner successfully", getBanner));
+        .json(new apiResponse_1.default(true, 200, "Coin Trasfer successfully"));
 }));
-exports.getAllBanner = getAllBanner;
+exports.sendCoinControllers = sendCoinControllers;

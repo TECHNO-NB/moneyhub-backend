@@ -7,6 +7,7 @@ import {
   logoutUserControllers,
   registerUserControllers,
   saveNotificationTokenControllers,
+  sendCoinControllers,
   signInControllers,
   verifyUserControllers,
 } from '../controllers/userControllers';
@@ -24,5 +25,6 @@ router.route('/get-topup-list').get(getAllFfTopUpListControllers);
 router.route('/get-ff-tournament').get(getAllFfTournamentControllers);
 router.route('/token').post(jwtVerify, saveNotificationTokenControllers);
 router.route('/get-all-banner').get(getAllBanner);
+router.route('/transfer-coin/:userId').post(jwtVerify, sendCoinControllers);
 
 export default router;

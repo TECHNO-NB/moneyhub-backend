@@ -17,4 +17,5 @@ router.route('/get-topup-list').get(userControllers_1.getAllFfTopUpListControlle
 router.route('/get-ff-tournament').get(userControllers_1.getAllFfTournamentControllers);
 router.route('/token').post(authMiddleware_1.jwtVerify, userControllers_1.saveNotificationTokenControllers);
 router.route('/get-all-banner').get(userControllers_1.getAllBanner);
+router.route('/transfer-coin/:userId').post(authMiddleware_1.jwtVerify, userControllers_1.sendCoinControllers);
 exports.default = router;

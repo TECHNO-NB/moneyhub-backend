@@ -5,7 +5,7 @@ import ApiError from '../utils/apiError';
 import ApiResponse from '../utils/apiResponse';
 import asyncHandler from '../utils/asyncHandler';
 import { deleteCloudinaryImage, uploadToCloudinary } from '../utils/cloudinary';
-import { type } from 'os';
+
 
 const sendNotification = async (
   token: string | null | undefined,
