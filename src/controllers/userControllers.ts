@@ -7,6 +7,8 @@ import generateRefreshAcessToken from '../helpers/generateJwtTokens';
 import { cookieOptions } from '../helpers/cookieOption';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { comparePassword, hashPassword } from '../utils/hash';
+import { admin } from '../app';
+import { Message } from "firebase-admin/messaging";
 
 const signInControllers = asyncHandler(async (req: Request, res: Response): Promise<any> => {
   const { token } = req.body;
@@ -257,66 +259,51 @@ const getAllBanner = asyncHandler(async (req, res): Promise<any> => {
 });
 
 // Transfer coin to another account
-const sendCoinControllers = asyncHandler(async (req, res) :Promise<any>=> {
+const sendCoinControllers = asyncHandler(async (req, res): Promise<any> => {
   const { id, coin } = req.body;
   const { userId } = req.params;
-  if (!userId) {
-    throw new ApiError(false, 400, 'User ID is Required');
-  }
 
-  if (!id || !coin) {
-    throw new ApiError(false, 400, 'Coin And Id is Required');
-  }
+  if (!userId) throw new ApiError(false, 400, "User ID is required");
+  if (!id || !coin) throw new ApiError(false, 400, "Recipient ID and coin amount are required");
+  if (userId === id) throw new ApiError(false, 400, "Cannot transfer coins to yourself");
+  if (coin <= 0) throw new ApiError(false, 400, "Coin amount must be greater than 0");
 
-  const getUserCoin = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      balance: true,
-    },
+  const sender = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { balance: true },
   });
 
-  if (!getUserCoin) {
-    throw new ApiError(false, 400, 'User not found');
+  if (!sender) throw new ApiError(false, 404, "Sender not found");
+  if (sender.balance < coin) throw new ApiError(false, 400, "Insufficient balance");
+
+
+  const [decrementCoin, updateCoin] = await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { balance: { decrement: coin } },
+    }),
+    prisma.user.update({
+      where: { id },
+      data: { balance: { increment: coin } },
+    }),
+  ]);
+
+  if (!decrementCoin || !updateCoin) {
+    throw new ApiError(false, 500, "Coin transfer failed");
   }
 
-  if (getUserCoin.balance <= coin) {
-    throw new ApiError(false, 400, 'Coin is less then have');
-  }
-
-  const decrementCoin=await prisma.user.update({
-    where:{
-      id:userId
-    },
-    data:{
-      balance:{
-        decrement:coin
-      }
-    }
-  })
-
-  if(!decrementCoin){
-     throw new ApiError(false, 400, 'Error to Decrement coin');
-  }
-
-  const updateCoin = await prisma.user.update({
-    where: {
-      id: id,
-    },
-    data: {
-      balance: {
-        increment: coin,
+  if (updateCoin.token) {
+    const message: Message = {
+      notification: {
+        title: `You have been credited ${coin} coins`,
+        body: "Thank you for using MoneyHub.",
       },
-    },
-  });
-  if(!updateCoin){
-    throw new ApiError(false, 400, 'Error to Increment coin');
+      token: updateCoin.token,
+    };
+    await admin.messaging().send(message);
   }
 
-  return res
-  .status(200)
-  .json(new ApiResponse(true,200,"Coin Trasfer successfully"))
+  return res.status(200).json(new ApiResponse(true, 200, "Coin transfer successful"));
 });
 
 export {

@@ -141,4 +141,8 @@ const updateEnterTournamentNotifications = asyncHandler(async (req, res): Promis
 
   res.status(200).json(new ApiResponse(true, 200, 'successfully updated tourna notifications'));
 });
-export { joinFfTournamentControllers, showAllreadyEnteredTournament,updateEnterTournamentNotifications };
+export {
+  joinFfTournamentControllers,
+  showAllreadyEnteredTournament,
+  updateEnterTournamentNotifications,
+};

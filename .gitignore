@@ -19,4 +19,8 @@ config
 ./test
 
 ./src/test
+DockerFile 
+DockerFile
+.gitignore
+
 

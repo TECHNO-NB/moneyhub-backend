@@ -42,7 +42,7 @@ router.route('/make-winner/:winnerId').patch(isAdminSubAdmin, makeWinner);
 router.route('/cancel-tournament/:tournamentId').post(isAdminSubAdmin, cancelTournament);
 router.route('/add-ff-toupup-rate').patch(isAdminSubAdmin, addFfTopupList);
 router.route('/withdrawal-requests').get(isAdmin, getAllWithdrawalRequests);
-router.route('/add-banner').post(isAdminSubAdmin,upload.single("banner"), addBannerControllers);
+router.route('/add-banner').post(isAdminSubAdmin, upload.single('banner'), addBannerControllers);
 router.route('/delete-banner').delete(isAdmin, deleteBanner);
 
 export default router;

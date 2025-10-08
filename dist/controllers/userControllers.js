@@ -21,6 +21,7 @@ const generateJwtTokens_1 = __importDefault(require("../helpers/generateJwtToken
 const cookieOption_1 = require("../helpers/cookieOption");
 const cloudinary_1 = require("../utils/cloudinary");
 const hash_1 = require("../utils/hash");
+const app_1 = require("../app");
 const signInControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token } = req.body;
     if (!token.email || !token.name || !token.picture) {
@@ -251,54 +252,45 @@ exports.getAllBanner = getAllBanner;
 const sendCoinControllers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, coin } = req.body;
     const { userId } = req.params;
-    if (!userId) {
-        throw new apiError_1.default(false, 400, 'User ID is Required');
-    }
-    if (!id || !coin) {
-        throw new apiError_1.default(false, 400, 'Coin And Id is Required');
-    }
-    const getUserCoin = yield db_1.default.user.findUnique({
-        where: {
-            id: userId,
-        },
-        select: {
-            balance: true,
-        },
+    if (!userId)
+        throw new apiError_1.default(false, 400, "User ID is required");
+    if (!id || !coin)
+        throw new apiError_1.default(false, 400, "Recipient ID and coin amount are required");
+    if (userId === id)
+        throw new apiError_1.default(false, 400, "Cannot transfer coins to yourself");
+    if (coin <= 0)
+        throw new apiError_1.default(false, 400, "Coin amount must be greater than 0");
+    const sender = yield db_1.default.user.findUnique({
+        where: { id: userId },
+        select: { balance: true },
     });
-    if (!getUserCoin) {
-        throw new apiError_1.default(false, 400, 'User not found');
+    if (!sender)
+        throw new apiError_1.default(false, 404, "Sender not found");
+    if (sender.balance < coin)
+        throw new apiError_1.default(false, 400, "Insufficient balance");
+    const [decrementCoin, updateCoin] = yield db_1.default.$transaction([
+        db_1.default.user.update({
+            where: { id: userId },
+            data: { balance: { decrement: coin } },
+        }),
+        db_1.default.user.update({
+            where: { id },
+            data: { balance: { increment: coin } },
+        }),
+    ]);
+    if (!decrementCoin || !updateCoin) {
+        throw new apiError_1.default(false, 500, "Coin transfer failed");
     }
-    if (getUserCoin.balance <= coin) {
-        throw new apiError_1.default(false, 400, 'Coin is less then have');
-    }
-    const decrementCoin = yield db_1.default.user.update({
-        where: {
-            id: userId
-        },
-        data: {
-            balance: {
-                decrement: coin
-            }
-        }
-    });
-    if (!decrementCoin) {
-        throw new apiError_1.default(false, 400, 'Error to Decrement coin');
-    }
-    const updateCoin = yield db_1.default.user.update({
-        where: {
-            id: id,
-        },
-        data: {
-            balance: {
-                increment: coin,
+    if (updateCoin.token) {
+        const message = {
+            notification: {
+                title: `You have been credited ${coin} coins`,
+                body: "Thank you for using MoneyHub.",
             },
-        },
-    });
-    if (!updateCoin) {
-        throw new apiError_1.default(false, 400, 'Error to Increment coin');
+            token: updateCoin.token,
+        };
+        yield app_1.admin.messaging().send(message);
     }
-    return res
-        .status(200)
-        .json(new apiResponse_1.default(true, 200, "Coin Trasfer successfully"));
+    return res.status(200).json(new apiResponse_1.default(true, 200, "Coin transfer successful"));
 }));
 exports.sendCoinControllers = sendCoinControllers;

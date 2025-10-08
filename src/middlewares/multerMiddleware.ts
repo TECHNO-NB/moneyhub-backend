@@ -1,5 +1,5 @@
-import { Request } from "express";
-import multer, { StorageEngine } from "multer";
+import { Request } from 'express';
+import multer, { StorageEngine } from 'multer';
 
 const storage: StorageEngine = multer.diskStorage({
   destination: function (
@@ -7,7 +7,7 @@ const storage: StorageEngine = multer.diskStorage({
     file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void
   ) {
-    cb(null, "./public/temp");
+    cb(null, './public/temp');
   },
   filename: function (
     req: Request,

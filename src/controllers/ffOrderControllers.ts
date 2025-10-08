@@ -58,5 +58,4 @@ const buyDiamondControllers = asyncHandler(async (req, res): Promise<any> => {
     .json(new ApiResponse(true, 201, 'Order created successfully', createOrder));
 });
 
-
 export { buyDiamondControllers };

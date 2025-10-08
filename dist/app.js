@@ -28,6 +28,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const morgan_1 = __importDefault(require("morgan"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const errorHandler_1 = __importDefault(require("./helpers/errorHandler"));
 const app = (0, express_1.default)();
 exports.app = app;
 // default middleware
@@ -59,6 +60,8 @@ app.use(body_parser_1.default.urlencoded({
     limit: '5mb',
 }));
 app.use(express_1.default.static('./public'));
+// error handler
+(0, errorHandler_1.default)();
 // firebase service
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 // firebase admin sdk

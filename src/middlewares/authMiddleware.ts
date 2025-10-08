@@ -20,7 +20,11 @@ const jwtVerify = asyncHandler(async (req: Request, res: Response, next: NextFun
     }
     const user = await prisma.user.findUnique({ where: { id: decodeAccessToken.id } });
     if (!user || user.refreshToken !== refreshToken) {
-      throw new ApiError(false, 401, 'Invalid refresh token deu to mismatch of token in db and cookie');
+      throw new ApiError(
+        false,
+        401,
+        'Invalid refresh token deu to mismatch of token in db and cookie'
+      );
     }
     const decodeRefreshToken = await jwt.verify(
       refreshToken,

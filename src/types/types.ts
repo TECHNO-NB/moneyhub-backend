@@ -5,3 +5,12 @@ export interface ffOrderTypes {
   diamondPrice: Number;
   diamondTitle: String;
 }
+
+
+export interface messageType {
+   notification: {
+      title: string,
+      body: string,
+    },
+    token: string,
+}

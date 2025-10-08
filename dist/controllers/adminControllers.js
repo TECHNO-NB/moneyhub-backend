@@ -27,7 +27,7 @@ const sendNotification = (token, title, body, link) => __awaiter(void 0, void 0,
         token,
         webpush: {
             fcmOptions: {
-                link: link || 'https://moneyhub.store', // default link
+                link: link || 'https://moneyhub.store/', // default link
             },
         },
     };

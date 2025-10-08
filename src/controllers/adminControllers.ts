@@ -6,7 +6,6 @@ import ApiResponse from '../utils/apiResponse';
 import asyncHandler from '../utils/asyncHandler';
 import { deleteCloudinaryImage, uploadToCloudinary } from '../utils/cloudinary';
 
-
 const sendNotification = async (
   token: string | null | undefined,
   title: string,
@@ -20,7 +19,7 @@ const sendNotification = async (
     token,
     webpush: {
       fcmOptions: {
-        link: link || 'https://moneyhub.store', // default link
+        link: link || 'https://moneyhub.store/', // default link
       },
     },
   };
@@ -708,13 +707,10 @@ const addBannerControllers = asyncHandler(async (req, res): Promise<any> => {
   return res.status(200).json(new ApiResponse(true, 201, 'Successfully added new banner'));
 });
 
+// Delete banner
+type T = any;
 
-
-
-// Delete banner 
-type T=any;
-
-const deleteBanner = asyncHandler(async (req, res):Promise<T>=> {
+const deleteBanner = asyncHandler(async (req, res): Promise<T> => {
   const { id } = req.params;
   if (!id) {
     throw new ApiError(false, 400, 'Image Id is required');
@@ -752,5 +748,5 @@ export {
   addFfTopupList,
   getAllWithdrawalRequests,
   addBannerControllers,
-  deleteBanner
+  deleteBanner,
 };
